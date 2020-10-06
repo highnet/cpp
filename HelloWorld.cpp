@@ -1,9 +1,16 @@
 #include <iostream>
 using namespace std;
 
+int add(int a, int b);
+
 int main(int argc, char* argv[])
 {
-    std::cout << "Hello World!" << std::endl;
-    std:cerr << "Error" << std::endl;
+    cout << "Hello World!" << endl;
+    cerr << "Error" << endl;
+    cout << add(1, 2);
 }
 
+int add(int a, int b) 
+{
+    return a + b;
+}
