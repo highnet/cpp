@@ -7,4 +7,4 @@ uniform vec4 outColor; // we set this variable in the OpenGL code.
 void main()
 {
     FragColor = outColor;
-}   
+}
