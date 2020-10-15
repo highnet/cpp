@@ -16,6 +16,27 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+class Camera {
+public:
+	glm::vec3 cameraTransformCartesianPosition;
+	float cameraTransformRadius;
+	float cameraTransformInclination;
+	float cameraTransformAzimuth;
+	float cameraOrbitSpeedX;
+	float cameraOrbitSpeedY;
+	Camera(glm::vec3, float, float, float, float, float);
+};
+Camera::Camera(glm::vec3 _cameraTransformCartesianPosition, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY)
+{
+	cameraTransformCartesianPosition = _cameraTransformCartesianPosition;
+	cameraTransformRadius = _cameraTransformRadius;
+	cameraTransformInclination = _cameraTransformInclination;
+	cameraTransformAzimuth = _cameraTransformAzimuth;
+	cameraOrbitSpeedX = _cameraOrbitSpeedX;
+	cameraOrbitSpeedY = _cameraOrbitSpeedY;
+}
+
+
 /* Prototypes */
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
@@ -24,6 +45,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 float Clamp(float f, float min, float max);
 glm::mat4 LookAtCamera(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+void window_onMouseDown(GLFWwindow* window);
+void window_onMouseRelease();
 
 /* Global variables */
 
@@ -70,6 +93,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // OpenGL version 4.3 is specified.
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // GLFW_OPENGL_PROFILE and GLFW_OPENGL_CORE_PROFILE specify which OpenGL profile to create the context for.
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // specify a fixed size window
+	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	GLFWwindow* window = glfwCreateWindow(width, height, window_title.c_str(), nullptr, nullptr);//Create Window
 
@@ -181,28 +205,23 @@ int main(int argc, char** argv)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
 #endif
 
-	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 model_1 = glm::mat4(1.0f);
+	glm::mat4 model_2 = glm::mat4(1.0f);
 
-	// model = glm::scale(model, glm::vec3(1.0f, 2.0f, 1.0f));
-	 // model = glm::translate(model, glm::vec3(-1.5f, -1.0f, 0.0f));
-	glm::vec3 cameraTransformPosition = glm::vec3(1.0f, 1.0f, 0.0f);
+	Camera mainCamera(glm::vec3(1.0f,1.0f,0.0f),6.0f,0.0f,0.0f, 0.005f, 0.01f);
 
-	float cameraTransformRadius = 6;
-	float cameraTransformInclination = 0;
-	float cameraTransformAzimuth = 2;
-	float cameraOrbitSpeedX = 0.005f;
-	float cameraOrbitSpeedY = 0.01f;
+	glm::mat4 proj = glm::perspective(1.04719755, aspect_ratio, zNear, zFar);
 
-	glm::mat4 proj = glm::perspective(120.0, aspect_ratio, zNear, zFar);
-;
+	model_1 = glm::scale(model_1, glm::vec3(1.0f, 2.0f, 1.0f));
+	model_1 = glm::translate(model_1, glm::vec3(-1.5f, -1.0f, 0.0f));
+
+	model_2 = glm::rotate(model_2, 0.78539816f, glm::vec3(0.0f, 0.0f, 1.0f));
+	model_2 = glm::translate(model_2, glm::vec3(1.5f, 1.0f, 0.0f));
 
 	while (!glfwWindowShouldClose(window)) // render loop
 	{
 		double time = glfwGetTime();
 		double deltaTime = time - lastTime;
-
-
-
 
 		if (deltaTime >= max_period) {
 			lastTime = time;
@@ -220,69 +239,57 @@ int main(int argc, char** argv)
 				float mouseDX = current_mouseX - old_mouseX;
 				float mouseDY = current_mouseY - old_mouseY;
 
-				
-				std::cout << "( " << mouseDX << ", " << mouseDY << ") ";
-
 				if (mouseDX < 0) {
-					cameraTransformAzimuth += cameraOrbitSpeedX;
+					mainCamera.cameraTransformAzimuth += mainCamera.cameraOrbitSpeedX;
 				}
 				else if (mouseDX > 0) {
-					cameraTransformAzimuth -= cameraOrbitSpeedX;
+					mainCamera.cameraTransformAzimuth -= mainCamera.cameraOrbitSpeedX;
 				}
 
 				if (mouseDY < 0) {
-					cameraTransformInclination -= cameraOrbitSpeedY;
+					mainCamera.cameraTransformInclination -= mainCamera.cameraOrbitSpeedY;
 				}
 				else if (mouseDY > 0) {
-					cameraTransformInclination += cameraOrbitSpeedY;
+					mainCamera.cameraTransformInclination += mainCamera.cameraOrbitSpeedY;
 				}
 
-				cameraTransformInclination = Clamp(cameraTransformInclination, -1, 1);
+				mainCamera.cameraTransformInclination = Clamp(mainCamera.cameraTransformInclination, -1, 1);
 
 				old_mouseX = current_mouseX;
 				old_mouseY = current_mouseY;
 
 			}
 
+			float cameraZ = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * cos(mainCamera.cameraTransformAzimuth);
+			float cameraX = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * sin(mainCamera.cameraTransformAzimuth);
+			float cameraY = mainCamera.cameraTransformRadius* sin(mainCamera.cameraTransformInclination);
 
-
-			float cameraZ = cameraTransformRadius * cos(cameraTransformInclination) * cos(cameraTransformAzimuth);
-			float cameraX = cameraTransformRadius * cos(cameraTransformInclination) * sin(cameraTransformAzimuth);
-			float cameraY = cameraTransformRadius* sin(cameraTransformInclination);
-
-	
-
-			std::cout << cameraX << " " << cameraY << " " << cameraZ << "\n";
-
-			cameraTransformPosition = glm::vec3(cameraX, cameraY, cameraZ);
-
+			mainCamera.cameraTransformCartesianPosition = glm::vec3(cameraX, cameraY, cameraZ);
 
 			glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
 
-			GLint location = glGetUniformLocation(shaderProgram, "outColor");
-			glUniform4f(location, 0.8, 0.1, 1.0, 1.0); // push color to shader
-
 			glm::mat4 view = LookAtCamera(
-				cameraTransformPosition, //eye 
+				mainCamera.cameraTransformCartesianPosition, //eye 
 				glm::vec3(0.0f, 0.0f, 0.0f), // target
 				glm::vec3(0.0f, 1.0f, 0.0f) // up
 			);
 
-
-
 			GLint uniView = glGetUniformLocation(shaderProgram, "view");
-			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view to shader
-
 			GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+			GLint uniModel = glGetUniformLocation(shaderProgram, "model");
+			GLint location = glGetUniformLocation(shaderProgram, "outColor");
+
+			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view to shader
 			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)); // push projection to shader
 
-
-
-
-			GLint uniModel = glGetUniformLocation(shaderProgram, "model");
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model)); // push model to shader
+			drawTeapot(); // draw the teapot
+			glUniform4f(location, 0.8, 0.1, 0.2, 1.0); // push color to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model_1)); // push model to shader
 
 			drawTeapot(); // draw the teapot
+			glUniform4f(location, 0.4, 0.3, 0.8, 1.0); // push color to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model_2)); // push model to shader
+
 
 			glfwSwapBuffers(window); // swap buffer
 		}
@@ -309,20 +316,27 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		LEFT_MOUSEBUTTON_PRESSED = true;
-
-		glfwGetCursorPos(window, &current_mouseX, &current_mouseY);
-
-		old_mouseX = current_mouseX;
-		old_mouseY = current_mouseY;
-
+		window_onMouseDown(window);
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		LEFT_MOUSEBUTTON_PRESSED = false;
+		window_onMouseRelease();
 	}
-
 }
+
+void window_onMouseDown(GLFWwindow* window) {
+	LEFT_MOUSEBUTTON_PRESSED = true;
+
+	glfwGetCursorPos(window, &current_mouseX, &current_mouseY);
+
+	old_mouseX = current_mouseX;
+	old_mouseY = current_mouseY;
+}
+
+void window_onMouseRelease() {
+	LEFT_MOUSEBUTTON_PRESSED = false;
+}
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
@@ -489,3 +503,6 @@ glm::mat4 LookAtCamera(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 float Clamp(float f, float min, float max) {
 	return f <= min ? min : f >= max ? max : f;
 }
+
+
+
