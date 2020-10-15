@@ -69,6 +69,7 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 int main(int argc, char** argv);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
 float Clamp(float f, float min, float max);
 glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 void window_onMouseDown(GLFWwindow* window);
@@ -81,6 +82,8 @@ bool UP_KEY_PRESSED = false;
 bool DOWN_KEY_PRESSED = false;
 bool RIGHT_KEY_PRESSED = false;
 bool LEFT_KEY_PRESSED = false;
+bool SCROLL_UP = false;
+bool SCROLL_DOWN = false;
 
 bool LEFT_MOUSEBUTTON_PRESSED = false;
 double current_mouseX = 0.0;
@@ -153,6 +156,7 @@ int main(int argc, char** argv)
 	/* Bind Key and mouse Buttons */
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouseCallback);
+	glfwSetScrollCallback(window, scrollCallBack);
 
 	/* Compile Vertex Shader */
 	const char* vertexSource;
@@ -231,6 +235,9 @@ int main(int argc, char** argv)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
 #endif
 
+	glEnable(GL_DEPTH_TEST);
+
+
 	Camera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f));
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar);
 
@@ -252,11 +259,22 @@ int main(int argc, char** argv)
 		if (deltaTime >= max_period) {
 			lastTime = time;
 
-			glClear(GL_COLOR_BUFFER_BIT); // clear screen
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen
 
 			/* Update scene, draw scene  and handle inputs*/
 
 			glfwPollEvents(); // handle OS events
+
+			if (SCROLL_UP) {
+				mainCamera.cameraTransformRadius += 0.1f;
+			}
+
+			else if (SCROLL_DOWN) {
+				mainCamera.cameraTransformRadius -= 0.1f;
+			}
+
+			SCROLL_DOWN = false;
+			SCROLL_UP = false;
 
 			if (LEFT_MOUSEBUTTON_PRESSED) { // while mouse is held
 
@@ -347,6 +365,22 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
 		window_onMouseRelease();
+	}
+}
+
+void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset) {
+	if (yOffset > 0) {
+		SCROLL_UP = true;
+	}
+	else {
+		SCROLL_UP = false;
+	}
+
+	if (yOffset < 0) {
+		SCROLL_DOWN = TRUE;
+	}
+	else {
+		SCROLL_DOWN = FALSE;
 	}
 }
 
