@@ -15,26 +15,52 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <list>
 
 class Camera {
 public:
-	glm::vec3 cameraTransformCartesianPosition;
+	glm::vec3 cameraTransformCartesian;
 	float cameraTransformRadius;
 	float cameraTransformInclination;
 	float cameraTransformAzimuth;
 	float cameraOrbitSpeedX;
 	float cameraOrbitSpeedY;
-	Camera(glm::vec3, float, float, float, float, float);
+	glm::vec3 cameraTargetTransform;
+	glm::mat4 projectionMatrix;
+	Camera(glm::vec3, float, float, float, float, float, glm::vec3);
 };
-Camera::Camera(glm::vec3 _cameraTransformCartesianPosition, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY)
+Camera::Camera(glm::vec3 _cameraTransformCartesian, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY, glm::vec3 _cameraTargetTransform)
 {
-	cameraTransformCartesianPosition = _cameraTransformCartesianPosition;
+	cameraTransformCartesian = _cameraTransformCartesian;
 	cameraTransformRadius = _cameraTransformRadius;
 	cameraTransformInclination = _cameraTransformInclination;
 	cameraTransformAzimuth = _cameraTransformAzimuth;
 	cameraOrbitSpeedX = _cameraOrbitSpeedX;
 	cameraOrbitSpeedY = _cameraOrbitSpeedY;
+	cameraTargetTransform = _cameraTargetTransform;
 }
+
+class Teapot {
+public: 
+	glm::mat4 model;
+	double r;
+	double g;
+	double b;
+	double a;
+	Teapot(glm::mat4, double, double, double, double);
+};
+
+Teapot::Teapot(glm::mat4 _model, double _r, double _g, double _b, double _a) {
+	model = _model;
+	r = _r;
+	g = _g;
+	b = _b;
+	a = _a;
+}
+
+struct Vector3 {
+	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
+};
 
 
 /* Prototypes */
@@ -44,9 +70,10 @@ int main(int argc, char** argv);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 float Clamp(float f, float min, float max);
-glm::mat4 LookAtCamera(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 void window_onMouseDown(GLFWwindow* window);
 void window_onMouseRelease();
+double DegreesToRadians(double degrees);
 
 /* Global variables */
 
@@ -58,9 +85,10 @@ bool LEFT_KEY_PRESSED = false;
 bool LEFT_MOUSEBUTTON_PRESSED = false;
 double current_mouseX = 0.0;
 double current_mouseY = 0.0;
-
 double old_mouseX = 0.0;
 double old_mouseY = 0.0;
+
+const double PI = std::atan(1.0) * 4;
 
 /* Main */
 int main(int argc, char** argv)
@@ -71,15 +99,16 @@ int main(int argc, char** argv)
 	int height = reader.GetInteger("window", "height", 800);
 	double aspect_ratio = (double)width / height;
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60);
-	double max_period = 10 / refresh_rate;
+	double max_period =  10 / refresh_rate;
 	double lastTime = 0.0;
 	std::string fullscreen = reader.Get("window", "fullscreen", "false");
 	std::string window_title = reader.Get("window", "title", "ECG 2020");
 	double fovy = reader.GetReal("camera", "fov", 60.0);
 	double zNear = reader.GetReal("camera", "near", 0.1);
 	double zFar = reader.GetReal("camera", "far", 100.0);
+	Vector3 Vector3; // initialize vector3 struct
 
-	/* Initialize scene */
+		/* Initialize scene */
 	if (!glfwInit()) { // initialize GLFW
 		std::cerr << "ERROR: GLFW Not Initialized"; // if GLFW is not initialized then deliver Error message... 
 		return 0; //...and Exit program
@@ -150,7 +179,6 @@ int main(int argc, char** argv)
 	/* Compile Fragment Shader */
 	const char* fragmentSource;
 	GLuint fragmentShader;
-
 	std::ifstream is_fs("assets/teapotRenderer.frag");// read shader file
 	const std::string f_fs((std::istreambuf_iterator<char>(is_fs)), std::istreambuf_iterator<char>());
 	fragmentSource = f_fs.c_str();
@@ -175,10 +203,8 @@ int main(int argc, char** argv)
 	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
-
 	glBindAttribLocation(shaderProgram, 0, "in_Position");
 	glBindAttribLocation(shaderProgram, 1, "in_Color");
-
 	glLinkProgram(shaderProgram);
 
 	// check for sp errors
@@ -205,18 +231,18 @@ int main(int argc, char** argv)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
 #endif
 
-	glm::mat4 model_1 = glm::mat4(1.0f);
-	glm::mat4 model_2 = glm::mat4(1.0f);
+	Camera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f));
+	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar);
 
-	Camera mainCamera(glm::vec3(1.0f,1.0f,0.0f),6.0f,0.0f,0.0f, 0.005f, 0.01f);
+	Teapot teapot1 = Teapot(glm::mat4(1.0f), 0.8, 0.1, 0.2, 1.0);
 
-	glm::mat4 proj = glm::perspective(1.04719755, aspect_ratio, zNear, zFar);
+	Teapot teapot2 = Teapot(glm::mat4(1.0f), 0.4, 0.3, 0.8, 1.0);
 
-	model_1 = glm::scale(model_1, glm::vec3(1.0f, 2.0f, 1.0f));
-	model_1 = glm::translate(model_1, glm::vec3(-1.5f, -1.0f, 0.0f));
+	teapot1.model = glm::scale(teapot1.model, glm::vec3(1.0f, 2.0f, 1.0f));
+	teapot1.model = glm::translate(teapot1.model, glm::vec3(-1.5f, -1.0f, 0.0f));
 
-	model_2 = glm::rotate(model_2, 0.78539816f, glm::vec3(0.0f, 0.0f, 1.0f));
-	model_2 = glm::translate(model_2, glm::vec3(1.5f, 1.0f, 0.0f));
+	teapot2.model = glm::rotate(teapot2.model, (float) DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
+	teapot2.model = glm::translate(teapot2.model, glm::vec3(1.5f, 1.0f, 0.0f));
 
 	while (!glfwWindowShouldClose(window)) // render loop
 	{
@@ -232,11 +258,11 @@ int main(int argc, char** argv)
 
 			glfwPollEvents(); // handle OS events
 
-			if (LEFT_MOUSEBUTTON_PRESSED) {
+			if (LEFT_MOUSEBUTTON_PRESSED) { // while mouse is held
 
-				glfwGetCursorPos(window, &current_mouseX, &current_mouseY);
+				glfwGetCursorPos(window, &current_mouseX, &current_mouseY); // get cursor position
 
-				float mouseDX = current_mouseX - old_mouseX;
+				float mouseDX = current_mouseX - old_mouseX; //calculate difference in mouseX and mouseY since last frame
 				float mouseDY = current_mouseY - old_mouseY;
 
 				if (mouseDX < 0) {
@@ -260,19 +286,19 @@ int main(int argc, char** argv)
 
 			}
 
-			float cameraZ = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * cos(mainCamera.cameraTransformAzimuth);
-			float cameraX = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * sin(mainCamera.cameraTransformAzimuth);
-			float cameraY = mainCamera.cameraTransformRadius* sin(mainCamera.cameraTransformInclination);
+			float newCameraZ = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * cos(mainCamera.cameraTransformAzimuth);
+			float newCameraX = mainCamera.cameraTransformRadius * cos(mainCamera.cameraTransformInclination) * sin(mainCamera.cameraTransformAzimuth);
+			float newCameraY = mainCamera.cameraTransformRadius* sin(mainCamera.cameraTransformInclination);
 
-			mainCamera.cameraTransformCartesianPosition = glm::vec3(cameraX, cameraY, cameraZ);
+			mainCamera.cameraTransformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ);
+
+			glm::mat4 view = Camera_LookAt(
+				mainCamera.cameraTransformCartesian, //eye 
+				mainCamera.cameraTargetTransform, // target
+				Vector3.UP // up
+			);
 
 			glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
-
-			glm::mat4 view = LookAtCamera(
-				mainCamera.cameraTransformCartesianPosition, //eye 
-				glm::vec3(0.0f, 0.0f, 0.0f), // target
-				glm::vec3(0.0f, 1.0f, 0.0f) // up
-			);
 
 			GLint uniView = glGetUniformLocation(shaderProgram, "view");
 			GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
@@ -280,15 +306,15 @@ int main(int argc, char** argv)
 			GLint location = glGetUniformLocation(shaderProgram, "outColor");
 
 			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view to shader
-			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)); // push projection to shader
+			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection to shader
 
-			drawTeapot(); // draw the teapot
-			glUniform4f(location, 0.8, 0.1, 0.2, 1.0); // push color to shader
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model_1)); // push model to shader
+			glUniform4f(location, teapot1.r, teapot1.g, teapot1.b, teapot1.a); // push color to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(teapot1.model)); // push teapot1 model to shader
+			drawTeapot();
 
-			drawTeapot(); // draw the teapot
-			glUniform4f(location, 0.4, 0.3, 0.8, 1.0); // push color to shader
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model_2)); // push model to shader
+			glUniform4f(location, teapot2.r, teapot2.g, teapot2.b, teapot2.a); // push color to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(teapot2.model)); // push teapot2 model to shader
+			drawTeapot();
 
 
 			glfwSwapBuffers(window); // swap buffer
@@ -480,13 +506,13 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 }
 
 
-// The first parameter "eye" specifies the position of the camera,
+// The first parameter "eye" specifies the position of the camera
 // the second parameter "target" is the point to be centered on-screen
-// the third parameter "up"  Here up is defined as the Z axis, which implies that the XY plane is the "ground"
-glm::mat4 LookAtCamera(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
+// the third parameter "up" specifies the UP axis of your scene
+glm::mat4 Camera_LookAt(glm::vec3 positionCartesian, glm::vec3 targetPositionCartesian, glm::vec3 upVector)
 {
-	glm::vec3 zaxis = normalize(eye - target);    // The "forward" vector.
-	glm::vec3 xaxis = normalize(cross(up, zaxis));// The "right" vector.
+	glm::vec3 zaxis = normalize(positionCartesian - targetPositionCartesian);    // The "forward" vector.
+	glm::vec3 xaxis = normalize(cross(upVector, zaxis));// The "right" vector.
 	glm::vec3 yaxis = cross(zaxis, xaxis);     // The "up" vector.
 
 	// Create a 4x4 view matrix from the right, up, forward and eye position vectors
@@ -494,14 +520,23 @@ glm::mat4 LookAtCamera(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 		glm::vec4(xaxis.x,            yaxis.x,            zaxis.x,       0),
 		glm::vec4(xaxis.y,            yaxis.y,            zaxis.y,       0),
 		glm::vec4(xaxis.z,            yaxis.z,            zaxis.z,       0),
-		glm::vec4(-dot(xaxis, eye), -dot(yaxis, eye), -dot(zaxis, eye),  1)
+		glm::vec4(-dot(xaxis, positionCartesian), -dot(yaxis, positionCartesian), -dot(zaxis, positionCartesian),  1)
 	};
 
 	return viewMatrix;
 }
 
-float Clamp(float f, float min, float max) {
-	return f <= min ? min : f >= max ? max : f;
+
+// the first parameter "value" specifies the floating point value to restrict inside the range defined by the min and max values
+// the second parameter "min" specifies the minimum floating point value to compare against
+// the third parameter "max" specifies The maximum floating point value to compare against.
+float Clamp(float value, float min, float max) {
+	return value <= min ? min : value >= max ? max : value;
+}
+
+// the parameter "degrees" specifies the 
+double DegreesToRadians(double degrees) {
+	return (degrees * PI ) / 180;
 }
 
 
