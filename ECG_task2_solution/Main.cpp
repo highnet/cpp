@@ -23,23 +23,23 @@ public:
 	float orbitalRadius; // orbital radius distance 
 	float orbitalInclination; // orbital inclination angle
 	float orbitalAzimuth; // orbital azimuth angle
-	float orbitalSpeedAzimuth; // orbital speed for the azimuth changes
-	float orbitalSpeedInclination; // orbital speed for the inclination changes
+	float orbitalSpeed; // orbital speed for the azimuth and inclination changes
 	glm::vec3 targetTransformCartesian; // cartesian position of the camera's target
 	glm::mat4 projectionMatrix; // projection matrix used by the camera
-	float orbitalZoomSpeed;
-	OrbitalCamera(glm::vec3, float, float, float, float, float, glm::vec3, float); // constructor definition
+	float orbitalSpeedZoom;
+	float strafeSpeed;
+	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float,float); // constructor definition
 };
-OrbitalCamera::OrbitalCamera(glm::vec3 _cameraTransformCartesian, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY, glm::vec3 _cameraTargetTransform, float _cameraOrbitZoomSpeed) // constructor
+OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom, float _strafeSpeed) // constructor
 {
-	transformCartesian = _cameraTransformCartesian;
-	orbitalRadius = _cameraTransformRadius;
-	orbitalInclination = _cameraTransformInclination;
-	orbitalAzimuth = _cameraTransformAzimuth;
-	orbitalSpeedAzimuth = _cameraOrbitSpeedX;
-	orbitalSpeedInclination = _cameraOrbitSpeedY;
-	targetTransformCartesian = _cameraTargetTransform;
-	orbitalZoomSpeed = _cameraOrbitZoomSpeed;
+	transformCartesian = _transformCartesian; //glm::vec3
+	orbitalRadius = _orbitalRadius; // float
+	orbitalInclination = _orbitalInclination; // float
+	orbitalAzimuth = _orbitalAzimuth; //float 
+	orbitalSpeed = _orbitalSpeed; // float 
+	targetTransformCartesian = _targetTransformCartesian; //glm::vec3
+	orbitalSpeedZoom = _orbitalSpeedZoom; // float 
+	strafeSpeed = _strafeSpeed; // float
 }
 
 class Teapot {
@@ -60,7 +60,7 @@ Teapot::Teapot(glm::mat4 _model, double _r, double _g, double _b, double _a) { /
 	a = _a;
 }
 
-struct Vectors { // Shorthand representation of 3D vectors in this engine
+struct Vectors { // Shorthand representation of WORLD 3D vectors in this engine
 	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
 	glm::vec3 BACK = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -79,6 +79,7 @@ struct InputManager {
 	bool SCROLL_UP = false;
 	bool SCROLL_DOWN = false;
 	bool LEFT_MOUSEBUTTON_PRESSED = false;
+	bool RIGHT_MOUSEBUTTON_PRESSED = false;
 	double current_mouseX = 0.0;
 	double current_mouseY = 0.0;
 	double old_mouseX = 0.0;
@@ -94,8 +95,6 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
 float Clamp(float f, float min, float max);
 glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
-void window_onMouseDown(GLFWwindow* window);
-void window_onMouseRelease();
 double DegreesToRadians(double degrees);
 
 /* Global variables */
@@ -113,7 +112,7 @@ int main(int argc, char** argv)
 	int height = reader.GetInteger("window", "height", 800); // screen height
 	double aspect_ratio = (double)width / height; // screen aspect ratio
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60); // frames per second value
-	double max_period =  10 / refresh_rate; // updates per second value
+	double max_period =  1 / refresh_rate; // updates per second value
 	double lastTime = 0.0; // helper variable for managing FPS
 	std::string fullscreen = reader.Get("window", "fullscreen", "false"); // fullscreen pseudo bool
 	std::string window_title = reader.Get("window", "title", "ECG 2020"); // window title
@@ -247,11 +246,34 @@ int main(int argc, char** argv)
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
-	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f),0.25f); // create orbital camera
+	OrbitalCamera mainCamera(
+		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
+		6.0f, // orbital radius distance
+		0.0f, // orbital inclination angle 
+		0.0f, // orbital azimuth angle
+		0.05f, // orbital speed for azimuth and inclination angles
+		glm::vec3(0.0f, 0.0f, 0.0f), // target's positon transform in cartesian coordinates x,y,z
+		0.25f, // orbital zoom speed
+		0.05f // strafe speed
+	); // create orbital camera
+
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
-	Teapot teapot1 = Teapot(glm::mat4(1.0f), 0.8, 0.1, 0.2, 1.0); // create teapot1
-	Teapot teapot2 = Teapot(glm::mat4(1.0f), 0.4, 0.3, 0.8, 1.0); // create teapot2
+	Teapot teapot1 = Teapot(
+		glm::mat4(1.0f) // model matrix
+		, 0.8, // r
+		0.1, // g
+		0.2, // b
+		1.0 // a
+	); // create teapot1
+
+	Teapot teapot2 = Teapot(
+		glm::mat4(1.0f), // model matrix
+		0.4, // r
+		0.3, // g 
+		0.8,// b 
+		1.0 // a
+	); // create teapot2
 
 	std::vector<Teapot> teapotList; // create teapot list
 
@@ -280,42 +302,75 @@ int main(int argc, char** argv)
 			glfwPollEvents(); // handle OS events
 
 			if (Input.SCROLL_UP) {
-				mainCamera.orbitalRadius += mainCamera.orbitalZoomSpeed; // move the camera away from target
+				mainCamera.orbitalRadius += mainCamera.orbitalSpeedZoom; // move the camera away from target
 			}
 
 			else if (Input.SCROLL_DOWN) {
-				mainCamera.orbitalRadius -= mainCamera.orbitalZoomSpeed; // move the camera towards target
+				mainCamera.orbitalRadius -= mainCamera.orbitalSpeedZoom; // move the camera towards target
 			}
 
 			Input.SCROLL_DOWN = false; // reset variable
 			Input.SCROLL_UP = false; // reset variable
 
-			if (Input.LEFT_MOUSEBUTTON_PRESSED) { // while mouse is held
 
-				glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
+			glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
 
-				float mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
-				float mouseDY = Input.current_mouseY - Input.old_mouseY;
+			float mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
+			float mouseDY = Input.current_mouseY - Input.old_mouseY;
+
+			Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
+			Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
+
+
+			if (Input.RIGHT_MOUSEBUTTON_PRESSED && !Input.LEFT_MOUSEBUTTON_PRESSED) { // while RMB is held and LMB is not held
+
+				/*Calculate the look, right and up vectors relating to the camera transform and the target transform*/
+				glm::vec3 camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);// Normalize the look vector.
+				glm::vec3 camera_right_vector = glm::cross(camera_look_vector, Vector3.UP); // Take the cross product of the vector and the up vector. This gives us the camera relative right vector.
+				glm::vec3 camera_up_vector = glm::cross(camera_right_vector, camera_look_vector); // Take the cross product of the right vector and the look vector. This is the camera relative up vector*/
+
 
 				if (mouseDX < 0) {
-					mainCamera.orbitalAzimuth += mainCamera.orbitalSpeedAzimuth; // increase azimuth by azimuth speed
+					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_right_vector; // move camera relative right
+					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_right_vector; // target must be moved equally
 				}
 				else if (mouseDX > 0) {
-					mainCamera.orbitalAzimuth -= mainCamera.orbitalSpeedAzimuth; // decrease azimuth by azimuth speed
+					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // move camera relative left
+					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // target must me moved equally
+				}
+
+				/* Recalculate look,right and up vectors in case they were changed since last calculated */
+				camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);
+				camera_right_vector = glm::cross(camera_look_vector, Vector3.UP);
+				camera_up_vector = glm::cross(camera_right_vector, camera_look_vector);
+
+				if (mouseDY < 0) {
+					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // move camera relative down
+					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // target must be moved equally
+				}
+				else if (mouseDY > 0) {
+					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_up_vector; // move camera relative up
+					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_up_vector; // target must be moved equaly
+				}
+			}
+
+			if (Input.LEFT_MOUSEBUTTON_PRESSED && !Input.RIGHT_MOUSEBUTTON_PRESSED) { // while LMB mouse is held and RMB is not held
+
+				if (mouseDX < 0) {
+					mainCamera.orbitalAzimuth += mainCamera.orbitalSpeed; // increase azimuth by azimuth speed
+				}
+				else if (mouseDX > 0) {
+					mainCamera.orbitalAzimuth -= mainCamera.orbitalSpeed; // decrease azimuth by azimuth speed
 				}
 
 				if (mouseDY < 0) {
-					mainCamera.orbitalInclination -= mainCamera.orbitalSpeedInclination; // increase inclination by inclination speed
+					mainCamera.orbitalInclination -= mainCamera.orbitalSpeed; // increase inclination by inclination speed
 				}
 				else if (mouseDY > 0) {
-					mainCamera.orbitalInclination += mainCamera.orbitalSpeedInclination; // decrease inclination by inclination speed
+					mainCamera.orbitalInclination += mainCamera.orbitalSpeed; // decrease inclination by inclination speed
 				}
 
 				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1, 1); // clamp values to avoid gimbal lock
-
-				Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
-				Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
-
 			}
 
 			float newCameraZ = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * cos(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
@@ -324,10 +379,11 @@ int main(int argc, char** argv)
 
 			mainCamera.transformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
 
+
 			glm::mat4 view = Camera_LookAt( 
-				mainCamera.transformCartesian, //eye 
-				mainCamera.targetTransformCartesian, // target
-				Vector3.UP // up
+				mainCamera.transformCartesian, // camera transform
+				mainCamera.targetTransformCartesian, // target transform
+				Vector3.UP // scene's UP vector
 			); // after being set in the right cartesian position, finally look at the target
 
 			glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
@@ -373,11 +429,17 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		window_onMouseDown(window);
+		Input.LEFT_MOUSEBUTTON_PRESSED = true;
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		window_onMouseRelease();
+		Input.LEFT_MOUSEBUTTON_PRESSED = false;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		Input.RIGHT_MOUSEBUTTON_PRESSED = true;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+		Input.RIGHT_MOUSEBUTTON_PRESSED = false;
 	}
 }
 
@@ -397,13 +459,6 @@ void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset) {
 	}
 }
 
-void window_onMouseDown(GLFWwindow* window) {
-	Input.LEFT_MOUSEBUTTON_PRESSED = true;
-}
-
-void window_onMouseRelease() {
-	Input.LEFT_MOUSEBUTTON_PRESSED = false;
-}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
