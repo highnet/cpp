@@ -1,6 +1,11 @@
 https://learnopengl.com/Getting-started/Hello-Triangle
+
 http://www.opengl-tutorial.org/beginners-tutorials/tutorial-4-a-colored-cube/
-http://jayelinda.com/modelling-by-numbers-part-two-a/
 http://ilkinulas.github.io/development/unity/2016/04/30/cube-mesh-in-unity3d.html
+
+https://community.khronos.org/t/how-to-use-multiple-vbos/73201/3
+http://jayelinda.com/modelling-by-numbers-part-two-a/ // cylinder
+
 https://stackoverflow.com/questions/4081898/procedurally-generate-a-sphere-mesh
+
 https://lindenreid.wordpress.com/2017/11/06/procedural-torus-tutorial/
