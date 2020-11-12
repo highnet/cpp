@@ -344,7 +344,6 @@ int main(int argc, char** argv)
 
 			glDeleteVertexArrays(1, &vao);
 
-			
 
 			glfwSwapBuffers(window); // swap buffer
 		}
