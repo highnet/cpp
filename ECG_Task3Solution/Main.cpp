@@ -201,8 +201,6 @@ int main(int argc, char** argv)
 	shaderProgram = glCreateProgram(); // create program
 	glAttachShader(shaderProgram, vertexShader); // attach shader
 	glAttachShader(shaderProgram, fragmentShader); // attach shader
-	glBindAttribLocation(shaderProgram, 0, "in_Position"); // bind attribute in location
-	glBindAttribLocation(shaderProgram, 1, "in_Color"); // bind attribute in location
 	glLinkProgram(shaderProgram); // link program
 
 	// check for sp errors
@@ -240,17 +238,19 @@ int main(int argc, char** argv)
 	GLint uniView = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
 	GLint uniProj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
 	GLint uniModel = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
-	GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor"); // get uniform ID for out-color vector
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position"); // get uniform ID for position
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+
+
 
 	float vertices[] = { // Triangle data
-	-1.0f, 1.0f, 1.0f,
-	-1.0f,-1.0f,1.0f,
-	1.0f,-1.0f,1.0f,
+	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f, //xyz rgb
+	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f,
+	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
 
-	-1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f,1.0f,
-	1.0f,1.0f,1.0f,
+	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f,
+	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
+	1.0f,1.0f,1.0f, 0.0f,1.0f,0.0f,
 	};
 
 
@@ -325,25 +325,25 @@ int main(int argc, char** argv)
 			); // after being set in the right cartesian position, finally look at the target
 
 
-			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view to shader
-			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection to shader
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push teapot1 model to shader
+			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
+			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push model matrix to shader
 
-			glUniform3f(uniColor, 0.4, 0.3, 0.9); // push color to shader
 
 			GLuint vao;
 			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
 
 			glEnableVertexAttribArray(posAttrib);
-			glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+
+			glEnableVertexAttribArray(colAttrib);
+			glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			glDeleteVertexArrays(1, &vao);
-			glBindVertexArray(0);
 
-			glDisableVertexAttribArray(posAttrib);
 			
 
 			glfwSwapBuffers(window); // swap buffer
@@ -352,6 +352,8 @@ int main(int argc, char** argv)
 
 	/* Free Resources */
 	glUseProgram(0);
+	glDisableVertexAttribArray(posAttrib);
+	glDisableVertexAttribArray(colAttrib);
 	glBindVertexArray(0);
 	glDeleteBuffers(1, &vbo);
 	glDetachShader(shaderProgram, vertexShader);
