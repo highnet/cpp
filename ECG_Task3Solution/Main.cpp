@@ -5,7 +5,6 @@
 * Joaquin Telleria 01408189
 */
 
-
 #include "Utils.h"
 #include <GLFW/glfw3.h>
 #include <string>
@@ -30,6 +29,7 @@ public:
 	float orbitalZoomSpeed;
 	OrbitalCamera(glm::vec3, float, float, float, float, float, glm::vec3, float); // constructor definition
 };
+
 OrbitalCamera::OrbitalCamera(glm::vec3 _cameraTransformCartesian, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY, glm::vec3 _cameraTargetTransform, float _cameraOrbitZoomSpeed) // constructor
 {
 	transformCartesian = _cameraTransformCartesian;
@@ -41,8 +41,6 @@ OrbitalCamera::OrbitalCamera(glm::vec3 _cameraTransformCartesian, float _cameraT
 	targetTransformCartesian = _cameraTargetTransform;
 	orbitalZoomSpeed = _cameraOrbitZoomSpeed;
 }
-
-
 
 struct Vectors { // Shorthand representation of 3D vectors in this engine
 	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -69,7 +67,7 @@ struct InputManager {
 	double old_mouseY = 0.0;
 };
 
-/* Prototypes */
+// Prototypes 
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
 int main(int argc, char** argv);
@@ -82,22 +80,22 @@ void window_onMouseDown(GLFWwindow* window);
 void window_onMouseRelease();
 double DegreesToRadians(double degrees);
 
-/* Global variables */
+// Global variables 
 
 InputManager Input;
 Vectors Vector3;
 const double PI = std::atan(1.0) * 4;
 
-/* Main */
+// Main 
 int main(int argc, char** argv)
 {
-	/* Load settings.ini */
+	// Load settings.ini 
 	INIReader reader("assets/settings.ini"); // init reader for ini files
 	int width = reader.GetInteger("window", "width", 800); // screen width
 	int height = reader.GetInteger("window", "height", 800); // screen height
 	double aspect_ratio = (double)width / height; // screen aspect ratio
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60); // frames per second value
-	double max_period =  10 / refresh_rate; // updates per second value
+	double max_period = 10 / refresh_rate; // updates per second value
 	double lastTime = 0.0; // helper variable for managing FPS
 	std::string fullscreen = reader.Get("window", "fullscreen", "false"); // fullscreen pseudo bool
 	std::string window_title = reader.Get("window", "title", "ECG 2020"); // window title
@@ -105,22 +103,26 @@ int main(int argc, char** argv)
 	double zNear = reader.GetReal("camera", "near", 0.1); // perspective near clipping plane
 	double zFar = reader.GetReal("camera", "far", 100.0); // perspective far clipping plane
 
-		/* Initialize scene */
+	// Initialize scene 
 	if (!glfwInit()) { // initialize GLFW
 		std::cerr << "ERROR: GLFW Not Initialized"; // if GLFW is not initialized then deliver Error message... 
 		return 0; //...and Exit program
 	}
 
+	// create debug context
 #if _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE); // Create a debug OpenGL context or tell your OpenGL library (GLFW, SDL) to do so.
 #endif
 
+	// set glfw window hints and enable or disable OpenGL capabilities. 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // specify OpenGL version, 3 "Major" and "minor" are two components of a single version number, separated by a dot.
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // OpenGL version 4.3 is specified.
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // GLFW_OPENGL_PROFILE and GLFW_OPENGL_CORE_PROFILE specify which OpenGL profile to create the context for.
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // specify a fixed size window
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
+	// create window 
 	GLFWwindow* window = glfwCreateWindow(width, height, window_title.c_str(), nullptr, nullptr);//Create Window
 
 	if (!window) {
@@ -131,28 +133,26 @@ int main(int argc, char** argv)
 
 	glfwMakeContextCurrent(window); //make sure that context window is active
 
+	// initialite glew
 	glewExperimental = true;  // To force GLEW to load all functions, the variable glewExperimental has to be modified:
+
 	GLenum err = glewInit(); //initialize glew
 	if (err != GLEW_OK) {
 		std::cerr << "ERROR: GLEW failed to initialize"; // if GLEW failed to initialize then deliver Error message... 
 		return 0; //...and Exit program
 	}
 
-	/* Init ECG framework */
-
+	// Init ECG framework 
 	if (!initFramework()) {
 		EXIT_WITH_ERROR("Failed to init framework");
 	}
 
-	glClearColor(0.2, 0.2, 0.2, 1); // set white as background color
-	glViewport(0, 0, width, height); // set viewport transform
-
-	/* Bind Key and mouse Buttons */
+	// Bind Key and mouse Buttons
 	glfwSetKeyCallback(window, key_callback); // set callback for keyboard
 	glfwSetMouseButtonCallback(window, mouseCallback); // set callback for mouse buttons
 	glfwSetScrollCallback(window, scrollCallBack); // set callback for scroll wheel
 
-	/* Compile Vertex Shader */
+	// Compile Vertex Shader 
 	const char* vertexSource; // create character list
 	GLuint vertexShader; // create vertex shader id
 	std::ifstream is_vs("assets/teapotRenderer.vert"); // read shader file
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 		delete[] message;
 	}
 
-	/* Compile Fragment Shader */
+	// Compile Fragment Shader 
 	const char* fragmentSource; // create character list 
 	GLuint fragmentShader; // create frament shader id
 	std::ifstream is_fs("assets/teapotRenderer.frag");// read shader file
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
 		delete[] message;
 	}
 
-	/* Compile Shader Program */
+	// Compile Shader Program 
 	GLuint shaderProgram; // create shader program id
 	shaderProgram = glCreateProgram(); // create program
 	glAttachShader(shaderProgram, vertexShader); // attach shader
@@ -222,28 +222,25 @@ int main(int argc, char** argv)
 		std::cerr << shaderProgramInfoLog; // display the error log
 		free(shaderProgramInfoLog);
 	}
+
+	//load default shader program
+	glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
+
+	// register debug callback
 #if _DEBUG
 	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
 #endif
 
-	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
-
-	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f),0.25f); // create orbital camera
-	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
-
-
-	glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
-
+	// get shader program uniform/attribute IDs
 	GLint uniView = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
 	GLint uniProj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
 	GLint uniModel = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
+	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
-
-
-	float vertices[] = { // Triangle data
+	// Generate vertex data
+	float rendererVertices[] = { // Triangle data
 	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f, //xyz rgb
 	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f,
 	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
@@ -253,12 +250,30 @@ int main(int argc, char** argv)
 	1.0f,1.0f,1.0f, 0.0f,1.0f,0.0f,
 	};
 
+	// Generate Vertex Array Objects and Vertex Buffer Objects
+	GLuint cuboidVbo;
+	glGenBuffers(1, &cuboidVbo); // generate a vertices buffer object
+	glBindBuffer(GL_ARRAY_BUFFER, cuboidVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rendererVertices), rendererVertices, GL_STATIC_DRAW);
 
-	GLuint vbo;
-	glGenBuffers(1, &vbo); // generate a vertices buffer object
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLuint cuboidVao;
+	glGenVertexArrays(1, &cuboidVao); // create the cuboid VAO
+	glBindVertexArray(cuboidVao); // bind the cuboid VAO
 
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
+
+
+	//generate camera
+	glClearColor(0.2, 0.2, 0.2, 1); // set the as background color
+	glViewport(0, 0, width, height); // set viewport transform
+	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f), 0.25f); // create orbital camera
+	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
+
+	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
 	{
 		double time = glfwGetTime(); // get current time
@@ -267,10 +282,7 @@ int main(int argc, char** argv)
 		if (deltaTime >= max_period) { // FPS limiter
 			lastTime = time; // reset last time for FPS limiter
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
-
-			/* Update scene, draw scene  and handle inputs*/
-
+		// handle inputs
 			glfwPollEvents(); // handle OS events
 
 			if (Input.SCROLL_UP) {
@@ -311,39 +323,31 @@ int main(int argc, char** argv)
 				Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
 
 			}
-
+			//handle cameras
 			float newCameraZ = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * cos(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
 			float newCameraX = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * sin(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
-			float newCameraY = mainCamera.orbitalRadius* sin(mainCamera.orbitalInclination); // convert spherical coordinate to cartesian coordinates
+			float newCameraY = mainCamera.orbitalRadius * sin(mainCamera.orbitalInclination); // convert spherical coordinate to cartesian coordinates
 
 			mainCamera.transformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
 
-			glm::mat4 view = Camera_LookAt( 
+			glm::mat4 view = Camera_LookAt(
 				mainCamera.transformCartesian, //eye 
 				mainCamera.targetTransformCartesian, // target
 				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
 
-
 			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
 			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
 			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push model matrix to shader
 
+		// handle pixel drawing
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
-			GLuint vao;
-			glGenVertexArrays(1, &vao);
-			glBindVertexArray(vao);
+			glBindVertexArray(cuboidVao); // bind the cuboid VAO
 
-			glEnableVertexAttribArray(posAttrib);
-			glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+			glDrawArrays(GL_TRIANGLES, 0, 6); // draw cuboid VAO ^
 
-			glEnableVertexAttribArray(colAttrib);
-			glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			glDeleteVertexArrays(1, &vao);
-
+			glBindVertexArray(0); // unbind VAO
 
 			glfwSwapBuffers(window); // swap buffer
 		}
@@ -351,15 +355,16 @@ int main(int argc, char** argv)
 
 	/* Free Resources */
 	glUseProgram(0);
-	glDisableVertexAttribArray(posAttrib);
-	glDisableVertexAttribArray(colAttrib);
-	glBindVertexArray(0);
-	glDeleteBuffers(1, &vbo);
 	glDetachShader(shaderProgram, vertexShader);
 	glDetachShader(shaderProgram, fragmentShader);
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	glDeleteVertexArrays(1, &cuboidVao);
+	glBindVertexArray(0);
+	glDisableVertexAttribArray(vertexPositions);
+	glDisableVertexAttribArray(vertexColors);
+	glDeleteBuffers(1, &cuboidVbo);
 	destroyFramework(); // destroy framework
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -575,7 +580,7 @@ float Clamp(float value, float min, float max) {
 	return value <= min ? min : value >= max ? max : value;
 }
 
-// the parameter "degrees" specifies the 
+// the parameter "degrees" specifies the degrees to be converted from degrees to radians
 double DegreesToRadians(double degrees) {
-	return (degrees * PI ) / 180;
+	return (degrees * PI) / 180;
 }
