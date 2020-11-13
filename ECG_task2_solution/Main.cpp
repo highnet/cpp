@@ -5,7 +5,6 @@
 * Joaquin Telleria 01408189
 */
 
-
 #include "Utils.h"
 #include <GLFW/glfw3.h>
 #include <string>
@@ -28,8 +27,9 @@ public:
 	glm::mat4 projectionMatrix; // projection matrix used by the camera
 	float orbitalSpeedZoom;
 	float strafeSpeed;
-	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float,float); // constructor definition
+	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float, float); // constructor definition
 };
+
 OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom, float _strafeSpeed) // constructor
 {
 	transformCartesian = _transformCartesian; //glm::vec3
@@ -42,25 +42,7 @@ OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius
 	strafeSpeed = _strafeSpeed; // float
 }
 
-class Teapot {
-public: 
-	glm::mat4 model; // model matrix of the teapot object
-	double r; // color Red
-	double g; // color Green
-	double b; // color Blue
-	double a; // color Alpha
-	Teapot(glm::mat4, double, double, double, double); // constructor definition
-};
-
-Teapot::Teapot(glm::mat4 _model, double _r, double _g, double _b, double _a) { // constructor
-	model = _model;
-	r = _r;
-	g = _g;
-	b = _b;
-	a = _a;
-}
-
-struct Vectors { // Shorthand representation of WORLD 3D vectors in this engine
+struct Vectors { // Shorthand representation of 3D vectors in this engine
 	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
 	glm::vec3 BACK = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -86,7 +68,7 @@ struct InputManager {
 	double old_mouseY = 0.0;
 };
 
-/* Prototypes */
+// Prototypes 
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
 int main(int argc, char** argv);
@@ -95,24 +77,26 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
 float Clamp(float f, float min, float max);
 glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+void window_onMouseDown(GLFWwindow* window);
+void window_onMouseRelease();
 double DegreesToRadians(double degrees);
 
-/* Global variables */
+// Global variables 
 
 InputManager Input;
 Vectors Vector3;
 const double PI = std::atan(1.0) * 4;
 
-/* Main */
+// Main 
 int main(int argc, char** argv)
 {
-	/* Load settings.ini */
+	// Load settings.ini 
 	INIReader reader("assets/settings.ini"); // init reader for ini files
 	int width = reader.GetInteger("window", "width", 800); // screen width
 	int height = reader.GetInteger("window", "height", 800); // screen height
 	double aspect_ratio = (double)width / height; // screen aspect ratio
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60); // frames per second value
-	double max_period =  1 / refresh_rate; // updates per second value
+	double max_period = 10 / refresh_rate; // updates per second value
 	double lastTime = 0.0; // helper variable for managing FPS
 	std::string fullscreen = reader.Get("window", "fullscreen", "false"); // fullscreen pseudo bool
 	std::string window_title = reader.Get("window", "title", "ECG 2020"); // window title
@@ -120,22 +104,25 @@ int main(int argc, char** argv)
 	double zNear = reader.GetReal("camera", "near", 0.1); // perspective near clipping plane
 	double zFar = reader.GetReal("camera", "far", 100.0); // perspective far clipping plane
 
-		/* Initialize scene */
+	// Initialize scene 
 	if (!glfwInit()) { // initialize GLFW
 		std::cerr << "ERROR: GLFW Not Initialized"; // if GLFW is not initialized then deliver Error message... 
 		return 0; //...and Exit program
 	}
 
+	// create debug context
 #if _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE); // Create a debug OpenGL context or tell your OpenGL library (GLFW, SDL) to do so.
 #endif
 
+	// set glfw window hints and enable or disable OpenGL capabilities. 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // specify OpenGL version, 3 "Major" and "minor" are two components of a single version number, separated by a dot.
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // OpenGL version 4.3 is specified.
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // GLFW_OPENGL_PROFILE and GLFW_OPENGL_CORE_PROFILE specify which OpenGL profile to create the context for.
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // specify a fixed size window
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
+	// create window 
 	GLFWwindow* window = glfwCreateWindow(width, height, window_title.c_str(), nullptr, nullptr);//Create Window
 
 	if (!window) {
@@ -146,28 +133,26 @@ int main(int argc, char** argv)
 
 	glfwMakeContextCurrent(window); //make sure that context window is active
 
+	// initialite glew
 	glewExperimental = true;  // To force GLEW to load all functions, the variable glewExperimental has to be modified:
+
 	GLenum err = glewInit(); //initialize glew
 	if (err != GLEW_OK) {
 		std::cerr << "ERROR: GLEW failed to initialize"; // if GLEW failed to initialize then deliver Error message... 
 		return 0; //...and Exit program
 	}
 
-	/* Init ECG framework */
-
+	// Init ECG framework 
 	if (!initFramework()) {
 		EXIT_WITH_ERROR("Failed to init framework");
 	}
 
-	glClearColor(1, 1, 1, 1); // set white as background color
-	glViewport(0, 0, width, height); // set viewport transform
-
-	/* Bind Key and mouse Buttons */
+	// Bind Key and mouse Buttons
 	glfwSetKeyCallback(window, key_callback); // set callback for keyboard
 	glfwSetMouseButtonCallback(window, mouseCallback); // set callback for mouse buttons
 	glfwSetScrollCallback(window, scrollCallBack); // set callback for scroll wheel
 
-	/* Compile Vertex Shader */
+	// Compile Vertex Shader 
 	const char* vertexSource; // create character list
 	GLuint vertexShader; // create vertex shader id
 	std::ifstream is_vs("assets/teapotRenderer.vert"); // read shader file
@@ -189,7 +174,7 @@ int main(int argc, char** argv)
 		delete[] message;
 	}
 
-	/* Compile Fragment Shader */
+	// Compile Fragment Shader 
 	const char* fragmentSource; // create character list 
 	GLuint fragmentShader; // create frament shader id
 	std::ifstream is_fs("assets/teapotRenderer.frag");// read shader file
@@ -211,13 +196,11 @@ int main(int argc, char** argv)
 		delete[] message;
 	}
 
-	/* Compile Shader Program */
+	// Compile Shader Program 
 	GLuint shaderProgram; // create shader program id
 	shaderProgram = glCreateProgram(); // create program
 	glAttachShader(shaderProgram, vertexShader); // attach shader
 	glAttachShader(shaderProgram, fragmentShader); // attach shader
-	glBindAttribLocation(shaderProgram, 0, "in_Position"); // bind attribute in location
-	glBindAttribLocation(shaderProgram, 1, "in_Color"); // bind attribute in location
 	glLinkProgram(shaderProgram); // link program
 
 	// check for sp errors
@@ -239,13 +222,77 @@ int main(int argc, char** argv)
 		std::cerr << shaderProgramInfoLog; // display the error log
 		free(shaderProgramInfoLog);
 	}
+
+	//load default shader program
+	glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
+
+	// register debug callback
 #if _DEBUG
 	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
 #endif
 
-	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
+	// get shader program uniform/attribute IDs
+	GLint uniView = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
+	GLint uniProj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
+	GLint uniModel = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
+	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
+	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
+	//Generate indexed vertex data
+	float cuboidVertices[] = { 
+	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f, 
+	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f, 
+	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f, 
+	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f, 
+	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f, 
+	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f, 
+	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f, 
+	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f, 
+	};
+	unsigned int cuboidIndices[] = {
+	0,1,2,
+	1,2,3,
+	2,3,6,
+	3,6,7,
+	4,6,7,
+	4,5,7,
+	0,4,5,
+	0,1,5,
+	1,3,7,
+	1,5,7,
+	0,2,4,
+	2,4,6,
+	};
+
+	GLuint indexedCuboidVao;
+	glGenVertexArrays(1, &indexedCuboidVao); // create the cuboid VAO
+	glBindVertexArray(indexedCuboidVao);
+
+	GLuint indexedCuboidVbo;
+	glGenBuffers(1, &indexedCuboidVbo); // generate a vertices buffer object
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, indexedCuboidVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboidVertices), cuboidVertices, GL_STATIC_DRAW);
+
+	GLuint indexedCuboidEbo;
+	glGenBuffers(1, &indexedCuboidEbo);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
+
+	glEnableVertexAttribArray(0);
+
+	//generate camera
+	glClearColor(0.2, 0.2, 0.2, 1); // set the as background color
+	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
 		6.0f, // orbital radius distance
@@ -256,37 +303,11 @@ int main(int argc, char** argv)
 		0.25f, // orbital zoom speed
 		0.05f // strafe speed
 	); // create orbital camera
-
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
-	Teapot teapot1 = Teapot(
-		glm::mat4(1.0f) // model matrix
-		, 0.8, // r
-		0.1, // g
-		0.2, // b
-		1.0 // a
-	); // create teapot1
+	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
-	Teapot teapot2 = Teapot(
-		glm::mat4(1.0f), // model matrix
-		0.4, // r
-		0.3, // g 
-		0.8,// b 
-		1.0 // a
-	); // create teapot2
-
-	std::vector<Teapot> teapotList; // create teapot list
-
-	teapotList.push_back(teapot1); // addd teapot1 to list
-	teapotList.push_back(teapot2); // add teapot2 to list
-
-	teapotList[0].model = glm::scale(teapotList[0].model, glm::vec3(1.0f, 2.0f, 1.0f)); // scale teapot1 along the positive Y axis
-	teapotList[0].model = glm::translate(teapotList[0].model, glm::vec3(-1.5f, -1.0f, 0.0f)); // translate teapot1
-
-	teapotList[1].model = glm::rotate(teapotList[1].model, (float) DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate teapot2 along the positive Z axis
-	teapotList[1].model = glm::translate(teapotList[1].model, glm::vec3(1.5f, 1.0f, 0.0f)); // trranslate teapot2
-
-
+	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
 	{
 		double time = glfwGetTime(); // get current time
@@ -295,10 +316,7 @@ int main(int argc, char** argv)
 		if (deltaTime >= max_period) { // FPS limiter
 			lastTime = time; // reset last time for FPS limiter
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
-
-			/* Update scene, draw scene  and handle inputs*/
-
+		// handle inputs
 			glfwPollEvents(); // handle OS events
 
 			if (Input.SCROLL_UP) {
@@ -312,9 +330,7 @@ int main(int argc, char** argv)
 			Input.SCROLL_DOWN = false; // reset variable
 			Input.SCROLL_UP = false; // reset variable
 
-
 			glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
-
 			float mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
 			float mouseDY = Input.current_mouseY - Input.old_mouseY;
 
@@ -372,37 +388,31 @@ int main(int argc, char** argv)
 
 				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1, 1); // clamp values to avoid gimbal lock
 			}
-
+			//handle cameras
 			float newCameraZ = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * cos(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
 			float newCameraX = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * sin(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
-			float newCameraY = mainCamera.orbitalRadius* sin(mainCamera.orbitalInclination); // convert spherical coordinate to cartesian coordinates
+			float newCameraY = mainCamera.orbitalRadius * sin(mainCamera.orbitalInclination); // convert spherical coordinate to cartesian coordinates
 
 			mainCamera.transformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
 
-
-			glm::mat4 view = Camera_LookAt( 
-				mainCamera.transformCartesian, // camera transform
-				mainCamera.targetTransformCartesian, // target transform
-				Vector3.UP // scene's UP vector
+			glm::mat4 view = Camera_LookAt(
+				mainCamera.transformCartesian, //eye 
+				mainCamera.targetTransformCartesian, // target
+				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
 
-			glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
+			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
+			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push model matrix to shader
 
-			GLint uniView = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
-			GLint uniProj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
-			GLint uniModel = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
-			GLint location = glGetUniformLocation(shaderProgram, "outColor"); // get uniform ID for out-color vector
+		// handle pixel drawing
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
-			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view to shader
-			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection to shader
+			glBindVertexArray(indexedCuboidVao);
 
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-			for each (Teapot teapot in teapotList) // render all teapots
-			{
-				glUniform4f(location, teapot.r, teapot.g, teapot.b, teapot.a); // push color to shader
-				glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(teapot.model)); // push teapot1 model to shader
-				drawTeapot(); // draw the teapots VAO/VBO
-			}
+			glBindVertexArray(0); // unbind VAO
 
 			glfwSwapBuffers(window); // swap buffer
 		}
@@ -410,13 +420,17 @@ int main(int argc, char** argv)
 
 	/* Free Resources */
 	glUseProgram(0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+	glBindVertexArray(0);
 	glDetachShader(shaderProgram, vertexShader);
 	glDetachShader(shaderProgram, fragmentShader);
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	glDeleteVertexArrays(1, &indexedCuboidVao);
+	glDeleteBuffers(1, &indexedCuboidVbo);
+	glDeleteBuffers(1, &indexedCuboidEbo);
+	// glDeleteVertexArrays(1, &cuboidVao);
+	//glDeleteBuffers(1, &cuboidVbo);
 	destroyFramework(); // destroy framework
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -459,6 +473,13 @@ void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset) {
 	}
 }
 
+void window_onMouseDown(GLFWwindow* window) {
+	Input.LEFT_MOUSEBUTTON_PRESSED = true;
+}
+
+void window_onMouseRelease() {
+	Input.LEFT_MOUSEBUTTON_PRESSED = false;
+}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -631,7 +652,7 @@ float Clamp(float value, float min, float max) {
 	return value <= min ? min : value >= max ? max : value;
 }
 
-// the parameter "degrees" specifies the 
+// the parameter "degrees" specifies the degrees to be converted from degrees to radians
 double DegreesToRadians(double degrees) {
-	return (degrees * PI ) / 180;
+	return (degrees * PI) / 180;
 }
