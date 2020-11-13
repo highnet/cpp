@@ -120,7 +120,6 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // GLFW_OPENGL_PROFILE and GLFW_OPENGL_CORE_PROFILE specify which OpenGL profile to create the context for.
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // specify a fixed size window
 	glfwWindowHint(GLFW_SAMPLES, 4);
-	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
 	// create window 
 	GLFWwindow* window = glfwCreateWindow(width, height, window_title.c_str(), nullptr, nullptr);//Create Window
@@ -239,6 +238,7 @@ int main(int argc, char** argv)
 	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
+	/*
 	// Generate vertex data
 	float rendererVertices[] = { // Triangle data
 	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f, //xyz rgb
@@ -247,18 +247,58 @@ int main(int argc, char** argv)
 
 	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f,
 	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
-	1.0f,1.0f,1.0f, 0.0f,1.0f,0.0f,
+	1.0f,1.0f,1.0f, 0.0f,1.0f,0.0f
 	};
 
 	// Generate Vertex Array Objects and Vertex Buffer Objects
-	GLuint cuboidVbo;
-	glGenBuffers(1, &cuboidVbo); // generate a vertices buffer object
-	glBindBuffer(GL_ARRAY_BUFFER, cuboidVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rendererVertices), rendererVertices, GL_STATIC_DRAW);
 
 	GLuint cuboidVao;
 	glGenVertexArrays(1, &cuboidVao); // create the cuboid VAO
 	glBindVertexArray(cuboidVao); // bind the cuboid VAO
+
+	GLuint cuboidVbo;
+	glGenBuffers(1, &cuboidVbo); // generate a vertices buffer object
+
+	glBindBuffer(GL_ARRAY_BUFFER, cuboidVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rendererVertices), rendererVertices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
+	glEnableVertexAttribArray(0);
+	*/
+
+	//Generate indexed vertex data
+	float cuboidVertices[] = { // https://gyazo.com/66bf073f681ddaf9f3b6be4ed7499f39
+		 1.0f,  1.0f, -1.0f,  1.0f,0.0f,0.0f,  // top right 0
+		 1.0f, -1.0f, -1.0f,  0.0f,1.0f,0.0f,// bottom right 1	
+		-1.0f, -1.0f, -1.0f,  0.0f,0.0f,1.0f,// bottom left 2
+		-1.0f,  1.0f, -1.0f,  0.5f,0.5f,0.5f// top left  3
+	};
+	unsigned int cuboidIndices[] = {
+		3, 2, 1,   // first triangle
+		0, 1, 3    // second triangle
+	};
+
+	GLuint indexedCuboidVao;
+	glGenVertexArrays(1, &indexedCuboidVao); // create the cuboid VAO
+	glBindVertexArray(indexedCuboidVao);
+
+	unsigned int indexedCuboidEbo;
+	glGenBuffers(1, &indexedCuboidEbo);
+
+	GLuint indexedCuboidVbo;
+	glGenBuffers(1, &indexedCuboidVbo); // generate a vertices buffer object
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glBindBuffer(GL_ARRAY_BUFFER, indexedCuboidVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboidVertices), cuboidVertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
@@ -266,12 +306,15 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 
+	glEnableVertexAttribArray(0);
 
 	//generate camera
 	glClearColor(0.2, 0.2, 0.2, 1); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
-	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.005f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f), 0.25f); // create orbital camera
+	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.05f, 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), 0.25f); // create orbital camera
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
+
+	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -343,9 +386,13 @@ int main(int argc, char** argv)
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
-			glBindVertexArray(cuboidVao); // bind the cuboid VAO
+//			glBindVertexArray(cuboidVao); // bind the cuboid VAO
+//			glDrawArrays(GL_TRIANGLES, 0, 6); // draw cuboid VAO ^
+//			glBindVertexArray(0); // unbind VAO
 
-			glDrawArrays(GL_TRIANGLES, 0, 6); // draw cuboid VAO ^
+			glBindVertexArray(indexedCuboidVao);
+
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glBindVertexArray(0); // unbind VAO
 
@@ -355,16 +402,17 @@ int main(int argc, char** argv)
 
 	/* Free Resources */
 	glUseProgram(0);
+	glBindVertexArray(0);
 	glDetachShader(shaderProgram, vertexShader);
 	glDetachShader(shaderProgram, fragmentShader);
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	glDeleteVertexArrays(1, &cuboidVao);
-	glBindVertexArray(0);
-	glDisableVertexAttribArray(vertexPositions);
-	glDisableVertexAttribArray(vertexColors);
-	glDeleteBuffers(1, &cuboidVbo);
+	glDeleteVertexArrays(1, &indexedCuboidVao);
+	glDeleteBuffers(1, &indexedCuboidVbo);
+	glDeleteBuffers(1, &indexedCuboidEbo);
+	// glDeleteVertexArrays(1, &cuboidVao);
+	//glDeleteBuffers(1, &cuboidVbo);
 	destroyFramework(); // destroy framework
 	glfwDestroyWindow(window);
 	glfwTerminate();
