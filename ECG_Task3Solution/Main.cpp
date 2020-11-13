@@ -268,12 +268,12 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 	glEnableVertexAttribArray(0);
-	*/
 
-	//Generate indexed vertex data
-	float cuboidVertices[] = { // https://gyazo.com/66bf073f681ddaf9f3b6be4ed7499f39
+
+		//Generate indexed vertex data
+	float cuboidVertices[] = {
 		 1.0f,  1.0f, -1.0f,  1.0f,0.0f,0.0f,  // top right 0
-		 1.0f, -1.0f, -1.0f,  0.0f,1.0f,0.0f,// bottom right 1	
+		 1.0f, -1.0f, -1.0f,  0.0f,1.0f,0.0f,// bottom right 1
 		-1.0f, -1.0f, -1.0f,  0.0f,0.0f,1.0f,// bottom left 2
 		-1.0f,  1.0f, -1.0f,  0.5f,0.5f,0.5f// top left  3
 	};
@@ -282,23 +282,50 @@ int main(int argc, char** argv)
 		0, 1, 3    // second triangle
 	};
 
+	*/
+
+	//Generate indexed vertex data
+	float cuboidVertices[] = { 
+	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f, 
+	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f, 
+	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f, 
+	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f, 
+	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f, 
+	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f, 
+	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f, 
+	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f, 
+	};
+	unsigned int cuboidIndices[] = {
+	0,1,2,
+	1,2,3,
+	2,3,6,
+	3,6,7,
+	4,6,7,
+	4,5,7,
+	0,4,5,
+	0,1,5,
+	1,3,7,
+	1,5,7,
+	0,2,4,
+	2,4,6,
+	};
+
 	GLuint indexedCuboidVao;
 	glGenVertexArrays(1, &indexedCuboidVao); // create the cuboid VAO
 	glBindVertexArray(indexedCuboidVao);
 
-	unsigned int indexedCuboidEbo;
-	glGenBuffers(1, &indexedCuboidEbo);
-
 	GLuint indexedCuboidVbo;
 	glGenBuffers(1, &indexedCuboidVbo); // generate a vertices buffer object
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, indexedCuboidVbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboidVertices), cuboidVertices, GL_STATIC_DRAW);
+
+	GLuint indexedCuboidEbo;
+	glGenBuffers(1, &indexedCuboidEbo);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
@@ -392,7 +419,7 @@ int main(int argc, char** argv)
 
 			glBindVertexArray(indexedCuboidVao);
 
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 			glBindVertexArray(0); // unbind VAO
 
