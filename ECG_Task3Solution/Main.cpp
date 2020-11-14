@@ -22,24 +22,24 @@ public:
 	float orbitalRadius; // orbital radius distance 
 	float orbitalInclination; // orbital inclination angle
 	float orbitalAzimuth; // orbital azimuth angle
-	float orbitalSpeedAzimuth; // orbital speed for the azimuth changes
-	float orbitalSpeedInclination; // orbital speed for the inclination changes
+	float orbitalSpeed; // orbital speed for the azimuth and inclination changes
 	glm::vec3 targetTransformCartesian; // cartesian position of the camera's target
 	glm::mat4 projectionMatrix; // projection matrix used by the camera
-	float orbitalZoomSpeed;
-	OrbitalCamera(glm::vec3, float, float, float, float, float, glm::vec3, float); // constructor definition
+	float orbitalSpeedZoom;
+	float strafeSpeed;
+	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float, float); // constructor definition
 };
 
-OrbitalCamera::OrbitalCamera(glm::vec3 _cameraTransformCartesian, float _cameraTransformRadius, float _cameraTransformInclination, float _cameraTransformAzimuth, float _cameraOrbitSpeedX, float _cameraOrbitSpeedY, glm::vec3 _cameraTargetTransform, float _cameraOrbitZoomSpeed) // constructor
+OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom, float _strafeSpeed) // constructor
 {
-	transformCartesian = _cameraTransformCartesian;
-	orbitalRadius = _cameraTransformRadius;
-	orbitalInclination = _cameraTransformInclination;
-	orbitalAzimuth = _cameraTransformAzimuth;
-	orbitalSpeedAzimuth = _cameraOrbitSpeedX;
-	orbitalSpeedInclination = _cameraOrbitSpeedY;
-	targetTransformCartesian = _cameraTargetTransform;
-	orbitalZoomSpeed = _cameraOrbitZoomSpeed;
+	transformCartesian = _transformCartesian; //glm::vec3
+	orbitalRadius = _orbitalRadius; // float
+	orbitalInclination = _orbitalInclination; // float
+	orbitalAzimuth = _orbitalAzimuth; //float 
+	orbitalSpeed = _orbitalSpeed; // float 
+	targetTransformCartesian = _targetTransformCartesian; //glm::vec3
+	orbitalSpeedZoom = _orbitalSpeedZoom; // float 
+	strafeSpeed = _strafeSpeed; // float
 }
 
 struct Vectors { // Shorthand representation of 3D vectors in this engine
@@ -61,6 +61,7 @@ struct InputManager {
 	bool SCROLL_UP = false;
 	bool SCROLL_DOWN = false;
 	bool LEFT_MOUSEBUTTON_PRESSED = false;
+	bool RIGHT_MOUSEBUTTON_PRESSED = false;
 	double current_mouseX = 0.0;
 	double current_mouseY = 0.0;
 	double old_mouseX = 0.0;
@@ -238,62 +239,16 @@ int main(int argc, char** argv)
 	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
-	/*
-	// Generate vertex data
-	float rendererVertices[] = { // Triangle data
-	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f, //xyz rgb
-	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f,
-	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
-
-	-1.0f, 1.0f, 1.0f, 1.0f,0.0f,0.0f,
-	1.0f,-1.0f,1.0f, 0.0f,0.0f,1.0f,
-	1.0f,1.0f,1.0f, 0.0f,1.0f,0.0f
-	};
-
-	// Generate Vertex Array Objects and Vertex Buffer Objects
-
-	GLuint cuboidVao;
-	glGenVertexArrays(1, &cuboidVao); // create the cuboid VAO
-	glBindVertexArray(cuboidVao); // bind the cuboid VAO
-
-	GLuint cuboidVbo;
-	glGenBuffers(1, &cuboidVbo); // generate a vertices buffer object
-
-	glBindBuffer(GL_ARRAY_BUFFER, cuboidVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rendererVertices), rendererVertices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
-
-	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
-	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
-	glEnableVertexAttribArray(0);
-
-
-		//Generate indexed vertex data
-	float cuboidVertices[] = {
-		 1.0f,  1.0f, -1.0f,  1.0f,0.0f,0.0f,  // top right 0
-		 1.0f, -1.0f, -1.0f,  0.0f,1.0f,0.0f,// bottom right 1
-		-1.0f, -1.0f, -1.0f,  0.0f,0.0f,1.0f,// bottom left 2
-		-1.0f,  1.0f, -1.0f,  0.5f,0.5f,0.5f// top left  3
-	};
-	unsigned int cuboidIndices[] = {
-		3, 2, 1,   // first triangle
-		0, 1, 3    // second triangle
-	};
-
-	*/
-
 	//Generate indexed vertex data
-	float cuboidVertices[] = { 
-	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f, 
-	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f, 
-	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f, 
-	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f, 
-	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f, 
-	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f, 
-	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f, 
-	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f, 
+	float cuboidVertices[] = {
+	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f,
+	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f,
+	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f,
+	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f,
+	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f,
+	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f,
+	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f,
+	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f,
 	};
 	unsigned int cuboidIndices[] = {
 	0,1,2,
@@ -336,9 +291,18 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(0);
 
 	//generate camera
-	glClearColor(0.2, 0.2, 0.2, 1); // set the as background color
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
-	OrbitalCamera mainCamera(glm::vec3(1.0f, 1.0f, 0.0f), 6.0f, 0.0f, 0.0f, 0.05f, 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), 0.25f); // create orbital camera
+	OrbitalCamera mainCamera(
+		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
+		6.0f, // orbital radius distance
+		0.0f, // orbital inclination angle 
+		0.0f, // orbital azimuth angle
+		0.05f, // orbital speed for azimuth and inclination angles
+		glm::vec3(0.0f, 0.0f, 0.0f), // target's positon transform in cartesian coordinates x,y,z
+		0.25f, // orbital zoom speed
+		0.05f // strafe speed
+	); // create orbital camera
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
@@ -356,42 +320,73 @@ int main(int argc, char** argv)
 			glfwPollEvents(); // handle OS events
 
 			if (Input.SCROLL_UP) {
-				mainCamera.orbitalRadius += mainCamera.orbitalZoomSpeed; // move the camera away from target
+				mainCamera.orbitalRadius += mainCamera.orbitalSpeedZoom; // move the camera away from target
 			}
 
 			else if (Input.SCROLL_DOWN) {
-				mainCamera.orbitalRadius -= mainCamera.orbitalZoomSpeed; // move the camera towards target
+				mainCamera.orbitalRadius -= mainCamera.orbitalSpeedZoom; // move the camera towards target
 			}
 
 			Input.SCROLL_DOWN = false; // reset variable
 			Input.SCROLL_UP = false; // reset variable
 
-			if (Input.LEFT_MOUSEBUTTON_PRESSED) { // while mouse is held
+			glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
+			double mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
+			double mouseDY = Input.current_mouseY - Input.old_mouseY;
 
-				glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
+			Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
+			Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
 
-				float mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
-				float mouseDY = Input.current_mouseY - Input.old_mouseY;
+
+			if (Input.RIGHT_MOUSEBUTTON_PRESSED && !Input.LEFT_MOUSEBUTTON_PRESSED) { // while RMB is held and LMB is not held
+
+				/*Calculate the look, right and up vectors relating to the camera transform and the target transform*/
+				glm::vec3 camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);// Normalize the look vector.
+				glm::vec3 camera_right_vector = glm::cross(camera_look_vector, Vector3.UP); // Take the cross product of the vector and the up vector. This gives us the camera relative right vector.
+				glm::vec3 camera_up_vector = glm::cross(camera_right_vector, camera_look_vector); // Take the cross product of the right vector and the look vector. This is the camera relative up vector*/
+
 
 				if (mouseDX < 0) {
-					mainCamera.orbitalAzimuth += mainCamera.orbitalSpeedAzimuth; // increase azimuth by azimuth speed
+					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_right_vector; // move camera relative right
+					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_right_vector; // target must be moved equally
 				}
 				else if (mouseDX > 0) {
-					mainCamera.orbitalAzimuth -= mainCamera.orbitalSpeedAzimuth; // decrease azimuth by azimuth speed
+					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // move camera relative left
+					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // target must me moved equally
+				}
+
+				/* Recalculate look,right and up vectors in case they were changed since last calculated */
+				camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);
+				camera_right_vector = glm::cross(camera_look_vector, Vector3.UP);
+				camera_up_vector = glm::cross(camera_right_vector, camera_look_vector);
+
+				if (mouseDY < 0) {
+					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // move camera relative down
+					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // target must be moved equally
+				}
+				else if (mouseDY > 0) {
+					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_up_vector; // move camera relative up
+					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_up_vector; // target must be moved equaly
+				}
+			}
+
+			if (Input.LEFT_MOUSEBUTTON_PRESSED && !Input.RIGHT_MOUSEBUTTON_PRESSED) { // while LMB mouse is held and RMB is not held
+
+				if (mouseDX < 0) {
+					mainCamera.orbitalAzimuth += mainCamera.orbitalSpeed; // increase azimuth by azimuth speed
+				}
+				else if (mouseDX > 0) {
+					mainCamera.orbitalAzimuth -= mainCamera.orbitalSpeed; // decrease azimuth by azimuth speed
 				}
 
 				if (mouseDY < 0) {
-					mainCamera.orbitalInclination -= mainCamera.orbitalSpeedInclination; // increase inclination by inclination speed
+					mainCamera.orbitalInclination -= mainCamera.orbitalSpeed; // increase inclination by inclination speed
 				}
 				else if (mouseDY > 0) {
-					mainCamera.orbitalInclination += mainCamera.orbitalSpeedInclination; // decrease inclination by inclination speed
+					mainCamera.orbitalInclination += mainCamera.orbitalSpeed; // decrease inclination by inclination speed
 				}
 
 				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1, 1); // clamp values to avoid gimbal lock
-
-				Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
-				Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
-
 			}
 			//handle cameras
 			float newCameraZ = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * cos(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
@@ -412,10 +407,6 @@ int main(int argc, char** argv)
 
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
-
-//			glBindVertexArray(cuboidVao); // bind the cuboid VAO
-//			glDrawArrays(GL_TRIANGLES, 0, 6); // draw cuboid VAO ^
-//			glBindVertexArray(0); // unbind VAO
 
 			glBindVertexArray(indexedCuboidVao);
 
@@ -452,11 +443,17 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		window_onMouseDown(window);
+		Input.LEFT_MOUSEBUTTON_PRESSED = true;
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		window_onMouseRelease();
+		Input.LEFT_MOUSEBUTTON_PRESSED = false;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		Input.RIGHT_MOUSEBUTTON_PRESSED = true;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+		Input.RIGHT_MOUSEBUTTON_PRESSED = false;
 	}
 }
 
