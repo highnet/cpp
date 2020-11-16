@@ -16,6 +16,95 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
+// Prototypes 
+void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
+static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
+int main(int argc, char** argv);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
+float Clamp(float f, float min, float max);
+glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+void window_onMouseDown(GLFWwindow* window);
+void Window_onMouseRelease();
+double DegreesToRadians(double degrees);
+
+class CuboidMesh {
+public:
+	float vertices[48];
+	unsigned int indices[36];
+	CuboidMesh();
+	CuboidMesh(float length, float height, float width, float r , float g , float b);
+};
+
+
+CuboidMesh::CuboidMesh() {
+
+}
+
+CuboidMesh::CuboidMesh(float length, float height, float width,float r, float g, float b) {
+
+	// generate unit cuboid vertices coordinates
+	vertices[0] = -0.5;  vertices[1] = 0.5;   vertices[2] = 0.5;   vertices[3] = r;  vertices[4] = g;  vertices[5] = b;
+	vertices[6] = 0.5;   vertices[7] = 0.5;   vertices[8] = 0.5;   vertices[9] = r;  vertices[10] = g; vertices[11] = b;
+	vertices[12] = -0.5; vertices[13] = -0.5; vertices[14] = 0.5;  vertices[15] = r; vertices[16] = g; vertices[17] = b;
+	vertices[18] = 0.5;  vertices[19] = -0.5; vertices[20] = 0.5;  vertices[21] = r; vertices[22] = g; vertices[23] = b;
+	vertices[24] = -0.5; vertices[25] = 0.5;  vertices[26] = -0.5; vertices[27] = r; vertices[28] = g; vertices[29] = b;
+	vertices[30] = 0.5;  vertices[31] = 0.5;  vertices[32] = -0.5; vertices[33] = r; vertices[34] = g; vertices[35] = b;
+	vertices[36] = -0.5; vertices[37] = -0.5; vertices[38] = -0.5; vertices[39] = r; vertices[40] = g; vertices[41] = b;
+	vertices[42] = 0.5;  vertices[43] = -0.5; vertices[44] = -0.5; vertices[45] = r; vertices[46] = g; vertices[47] = b;
+	
+	// apply linear transformations
+	int counter = 0;
+	for (int i = 0; i < 48; i++) {
+		switch (counter) {
+		case 0:
+			vertices[i] *= height;
+			counter++;
+			break;
+		case 1:
+			vertices[i] *= length;
+			counter++;
+			break;
+		case 2:
+			vertices[i] *= width;
+			counter++;
+			break;
+		case 5:
+			counter = 0;
+			break;
+		default:
+			counter++;
+			break;
+		}
+	}
+
+	// specify faces
+	indices[0] = 0;  indices[1] = 1; indices[2] = 2;
+	indices[3] = 1;  indices[4] = 2; indices[5] = 3;
+	indices[6] = 2;  indices[7] = 3; indices[8] = 6;
+	indices[9] = 3;  indices[10] = 6; indices[11] = 7;
+	indices[12] = 4; indices[13] = 6; indices[14] = 7;
+	indices[15] = 4; indices[16] = 5; indices[17] = 7;
+	indices[18] = 0; indices[19] = 4; indices[20] = 5;
+	indices[21] = 0; indices[22] = 1; indices[23] = 5;
+	indices[24] = 1; indices[25] = 3; indices[26] = 7;
+	indices[27] = 1; indices[28] = 5; indices[29] = 7;
+	indices[30] = 0; indices[31] = 2; indices[32] = 4;
+	indices[33] = 2; indices[34] = 4; indices[35] = 6;
+}
+
+class Cuboid {
+public:
+	glm::mat4 transform; // model matrix of the cuboid object
+	CuboidMesh mesh;
+	Cuboid::Cuboid(glm::mat4, float, float, float, float, float ,float);
+};
+Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b) {
+	transform = _transform;
+	mesh = CuboidMesh(length,height,width,r,g,b);
+}
+
 class OrbitalCamera {
 public:
 	glm::vec3 transformCartesian; // cartesian position of the camera
@@ -68,21 +157,7 @@ struct InputManager {
 	double old_mouseY = 0.0;
 };
 
-// Prototypes 
-void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
-static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
-int main(int argc, char** argv);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouseCallback(GLFWwindow* window, int button, int action, int mods);
-void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
-float Clamp(float f, float min, float max);
-glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
-void window_onMouseDown(GLFWwindow* window);
-void window_onMouseRelease();
-double DegreesToRadians(double degrees);
-
 // Global variables 
-
 InputManager Input;
 Vectors Vector3;
 const double PI = std::atan(1.0) * 4;
@@ -239,31 +314,17 @@ int main(int argc, char** argv)
 	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
-	//Generate indexed vertex data
-	float cuboidVertices[] = { 
-	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f, 
-	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f, 
-	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f, 
-	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f, 
-	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f, 
-	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f, 
-	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f, 
-	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f, 
-	};
-	unsigned int cuboidIndices[] = {
-	0,1,2,
-	1,2,3,
-	2,3,6,
-	3,6,7,
-	4,6,7,
-	4,5,7,
-	0,4,5,
-	0,1,5,
-	1,3,7,
-	1,5,7,
-	0,2,4,
-	2,4,6,
-	};
+
+	// generate cuboid object
+	Cuboid cuboid(
+		glm::mat4(1.0f), // starting transform
+		8.0f, // starting length
+		1.3f, // starting height
+		2.0f, // starting width
+		0.3f, // starting r
+ 		0.7f, // starting g
+		1.0f // starting b
+	);
 
 	GLuint indexedCuboidVao;
 	glGenVertexArrays(1, &indexedCuboidVao); // create the cuboid VAO
@@ -272,15 +333,14 @@ int main(int argc, char** argv)
 	GLuint indexedCuboidVbo;
 	glGenBuffers(1, &indexedCuboidVbo); // generate a vertices buffer object
 
-
 	glBindBuffer(GL_ARRAY_BUFFER, indexedCuboidVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboidVertices), cuboidVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboid.mesh.vertices), cuboid.mesh.vertices, GL_STATIC_DRAW);
 
 	GLuint indexedCuboidEbo;
 	glGenBuffers(1, &indexedCuboidEbo);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboid.mesh.indices), cuboid.mesh.indices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
@@ -291,7 +351,7 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(0);
 
 	//generate camera
-	glClearColor(0.2, 0.2, 0.2, 1); // set the as background color
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -306,6 +366,11 @@ int main(int argc, char** argv)
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
+
+
+	// do pre-rendering object manipulation
+	cuboid.transform = glm::scale(cuboid.transform, glm::vec3(0.5f, 0.5f, 0.5f));
+	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -331,8 +396,8 @@ int main(int argc, char** argv)
 			Input.SCROLL_UP = false; // reset variable
 
 			glfwGetCursorPos(window, &Input.current_mouseX, &Input.current_mouseY); // get cursor position
-			float mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
-			float mouseDY = Input.current_mouseY - Input.old_mouseY;
+			double mouseDX = Input.current_mouseX - Input.old_mouseX; //calculate difference in mouseX and mouseY since last frame
+			double mouseDY = Input.current_mouseY - Input.old_mouseY;
 
 			Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
 			Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
@@ -410,6 +475,8 @@ int main(int argc, char** argv)
 
 			glBindVertexArray(indexedCuboidVao);
 
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push teapot1 model to shader
+
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 			glBindVertexArray(0); // unbind VAO
@@ -477,7 +544,7 @@ void window_onMouseDown(GLFWwindow* window) {
 	Input.LEFT_MOUSEBUTTON_PRESSED = true;
 }
 
-void window_onMouseRelease() {
+void Window_onMouseRelease() {
 	Input.LEFT_MOUSEBUTTON_PRESSED = false;
 }
 
