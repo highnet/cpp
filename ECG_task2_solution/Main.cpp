@@ -103,28 +103,24 @@ CuboidMesh::CuboidMesh(float length, float height, float width,float r, float g,
 class Cuboid {
 public:
 	glm::mat4 transform; // model matrix of the cuboid object
-	CuboidMesh mesh;
-	GLuint Vao;
-	GLuint Vbo;
-	GLuint Ebo;
-	Cuboid::Cuboid(glm::mat4, float, float, float, float, float ,float,GLint,GLint);
+	CuboidMesh mesh; // mesh object
+	GLuint Vao; // vertex array object
+	GLuint Vbo; // vertex buffer object
+	GLuint Ebo; // element buffer object
+	Cuboid::Cuboid(glm::mat4, float, float, float, float, float ,float,GLint,GLint); // constructor
 };
 Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b,GLint vertexPositions, GLint vertexColors) {
 	transform = _transform;
 	mesh = CuboidMesh(length,height,width,r,g,b);
 
-	glGenVertexArrays(1, &Vao); // create the cuboid VAO
-	glBindVertexArray(Vao);
-
-	glGenBuffers(1, &Vbo); // generate a vertices buffer object
-
-	glBindBuffer(GL_ARRAY_BUFFER, Vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &Ebo);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &Vao); // create the VAO
+	glBindVertexArray(Vao); // bind the VAO
+	glGenBuffers(1, &Vbo); // generate the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
+	glGenBuffers(1, &Ebo); // generate the EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo); // bind the EBO
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
@@ -132,7 +128,7 @@ Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, fl
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(0); // disable the VAO
 
 }
 
