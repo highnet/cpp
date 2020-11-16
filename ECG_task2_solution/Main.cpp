@@ -473,11 +473,9 @@ int main(int argc, char** argv)
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
-			glBindVertexArray(indexedCuboidVao);
-
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push teapot1 model to shader
-
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(indexedCuboidVao); //  bind cuboid VAO
+			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 
 			glBindVertexArray(0); // unbind VAO
 
