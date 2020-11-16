@@ -16,6 +16,122 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
+// Prototypes 
+void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
+static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
+int main(int argc, char** argv);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
+float Clamp(float f, float min, float max);
+glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+void window_onMouseDown(GLFWwindow* window);
+void Window_onMouseRelease();
+double DegreesToRadians(double degrees);
+
+class CuboidMesh {
+public:
+	float vertices[48];
+	unsigned int indices[36];
+	CuboidMesh();
+	CuboidMesh(float length, float height, float width, float r , float g , float b);
+};
+
+CuboidMesh::CuboidMesh() {
+
+}
+
+CuboidMesh::CuboidMesh(float length, float height, float width,float r, float g, float b) {
+
+	// generate unit cuboid vertices coordinates
+	vertices[0] = -0.5;  vertices[1] = 0.5;   vertices[2] = 0.5;   
+	vertices[6] = 0.5;   vertices[7] = 0.5;   vertices[8] = 0.5;  
+	vertices[12] = -0.5; vertices[13] = -0.5; vertices[14] = 0.5; 
+	vertices[18] = 0.5;  vertices[19] = -0.5; vertices[20] = 0.5;  
+	vertices[24] = -0.5; vertices[25] = 0.5;  vertices[26] = -0.5; 
+	vertices[30] = 0.5;  vertices[31] = 0.5;  vertices[32] = -0.5; 
+	vertices[36] = -0.5; vertices[37] = -0.5; vertices[38] = -0.5; 
+	vertices[42] = 0.5;  vertices[43] = -0.5; vertices[44] = -0.5; 
+	
+	// apply linear transformations and colors
+	int counter = 0;
+	for (int i = 0; i < 48; i++) {
+		switch (counter) {
+		case 0:
+			vertices[i] *= height;
+			counter++;
+			break;
+		case 1:
+			vertices[i] *= length;
+			counter++;
+			break;
+		case 2:
+			vertices[i] *= width;
+			counter++;
+			break;
+		case 3:
+			vertices[i] = r;
+			counter++;
+			break;
+		case 4:
+			vertices[i] = g;
+			counter++;
+			break;
+		case 5:
+			vertices[i] = b;
+			counter = 0;
+			break;
+		}
+	}
+
+	// specify faces
+	indices[0] = 0;  indices[1] = 1; indices[2] = 2;
+	indices[3] = 1;  indices[4] = 2; indices[5] = 3;
+	indices[6] = 2;  indices[7] = 3; indices[8] = 6;
+	indices[9] = 3;  indices[10] = 6; indices[11] = 7;
+	indices[12] = 4; indices[13] = 6; indices[14] = 7;
+	indices[15] = 4; indices[16] = 5; indices[17] = 7;
+	indices[18] = 0; indices[19] = 4; indices[20] = 5;
+	indices[21] = 0; indices[22] = 1; indices[23] = 5;
+	indices[24] = 1; indices[25] = 3; indices[26] = 7;
+	indices[27] = 1; indices[28] = 5; indices[29] = 7;
+	indices[30] = 0; indices[31] = 2; indices[32] = 4;
+	indices[33] = 2; indices[34] = 4; indices[35] = 6;
+
+}
+
+class Cuboid {
+public:
+	glm::mat4 transform; // model matrix of the cuboid object
+	CuboidMesh mesh; // mesh object
+	GLuint Vao; // vertex array object
+	GLuint Vbo; // vertex buffer object
+	GLuint Ebo; // element buffer object
+	Cuboid::Cuboid(glm::mat4, float, float, float, float, float ,float,GLint,GLint); // constructor
+};
+Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b,GLint vertexPositions, GLint vertexColors) {
+	transform = _transform;
+	mesh = CuboidMesh(length,height,width,r,g,b);
+
+	glGenVertexArrays(1, &Vao); // create the VAO
+	glBindVertexArray(Vao); // bind the VAO
+	glGenBuffers(1, &Vbo); // generate the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
+	glGenBuffers(1, &Ebo); // generate the EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo); // bind the EBO
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
+
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
+
+	glEnableVertexAttribArray(0); // disable the VAO
+
+}
+
 class OrbitalCamera {
 public:
 	glm::vec3 transformCartesian; // cartesian position of the camera
@@ -68,21 +184,7 @@ struct InputManager {
 	double old_mouseY = 0.0;
 };
 
-// Prototypes 
-void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
-static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
-int main(int argc, char** argv);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouseCallback(GLFWwindow* window, int button, int action, int mods);
-void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
-float Clamp(float f, float min, float max);
-glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
-void window_onMouseDown(GLFWwindow* window);
-void window_onMouseRelease();
-double DegreesToRadians(double degrees);
-
 // Global variables 
-
 InputManager Input;
 Vectors Vector3;
 const double PI = std::atan(1.0) * 4;
@@ -233,62 +335,25 @@ int main(int argc, char** argv)
 #endif
 
 	// get shader program uniform/attribute IDs
-	GLint uniView = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
-	GLint uniProj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
-	GLint uniModel = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
+	GLint View = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
+	GLint Proj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
+	GLint Model = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
 	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
-	//Generate indexed vertex data
-	float cuboidVertices[] = {
-	-1.0f,1.0f,1.0f, 1.0f,0.0f,0.0f,
-	1.0f,1.0f,1.0f, 0.5f,0.0f,0.0f,
-	-1.0f,-1.0f,1.0f, 0.0f,1.0f,0.0f,
-	1.0f,-1.0f,1.0f, 0.0f,0.5f,0.0f,
-	-1.0f,1.0f,-1.0f, 0.0f,0.0f,1.0f,
-	1.0f,1.0f,-1.0f, 0.0f,0.0f,0.5f,
-	-1.0f,-1.0f,-1.0f, 0.5f,0.5f,0.5f,
-	1.0f,-1.0f,-1.0f, 1.0f,1.0f,1.0f,
-	};
-	unsigned int cuboidIndices[] = {
-	0,1,2,
-	1,2,3,
-	2,3,6,
-	3,6,7,
-	4,6,7,
-	4,5,7,
-	0,4,5,
-	0,1,5,
-	1,3,7,
-	1,5,7,
-	0,2,4,
-	2,4,6,
-	};
 
-	GLuint indexedCuboidVao;
-	glGenVertexArrays(1, &indexedCuboidVao); // create the cuboid VAO
-	glBindVertexArray(indexedCuboidVao);
-
-	GLuint indexedCuboidVbo;
-	glGenBuffers(1, &indexedCuboidVbo); // generate a vertices buffer object
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, indexedCuboidVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cuboidVertices), cuboidVertices, GL_STATIC_DRAW);
-
-	GLuint indexedCuboidEbo;
-	glGenBuffers(1, &indexedCuboidEbo);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexedCuboidEbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cuboidIndices), cuboidIndices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
-
-	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
-	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
-
-	glEnableVertexAttribArray(0);
+	// generate cuboid object
+	Cuboid cuboid(
+		glm::mat4(1.0f), // starting transform
+		8.0f, // starting length
+		1.3f, // starting height
+		2.0f, // starting width
+		0.3f, // starting r
+ 		0.7f, // starting g
+		1.0f, // starting b
+		vertexPositions, // attribute ID for vertex position
+		vertexColors // atttribute ID for vertex color
+	);
 
 	//generate camera
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
@@ -306,6 +371,11 @@ int main(int argc, char** argv)
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
+
+
+	// do pre-rendering object manipulation
+	cuboid.transform = glm::scale(cuboid.transform, glm::vec3(0.5f, 0.5f, 0.5f));
+	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -401,16 +471,16 @@ int main(int argc, char** argv)
 				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
 
-			glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
-			glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push model matrix to shader
+			glUniformMatrix4fv(View, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
+			glUniformMatrix4fv(Proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
-			glBindVertexArray(indexedCuboidVao);
-
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 
 			glBindVertexArray(0); // unbind VAO
 
@@ -426,11 +496,6 @@ int main(int argc, char** argv)
 	glDeleteProgram(shaderProgram);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	glDeleteVertexArrays(1, &indexedCuboidVao);
-	glDeleteBuffers(1, &indexedCuboidVbo);
-	glDeleteBuffers(1, &indexedCuboidEbo);
-	// glDeleteVertexArrays(1, &cuboidVao);
-	//glDeleteBuffers(1, &cuboidVbo);
 	destroyFramework(); // destroy framework
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -477,7 +542,7 @@ void window_onMouseDown(GLFWwindow* window) {
 	Input.LEFT_MOUSEBUTTON_PRESSED = true;
 }
 
-void window_onMouseRelease() {
+void Window_onMouseRelease() {
 	Input.LEFT_MOUSEBUTTON_PRESSED = false;
 }
 
