@@ -64,8 +64,8 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		vertices[positionCounter+ ringDataOffset] = unitPosition.x * radius;
 		positionCounter++;
 
-		vertices[positionCounter] = unitPosition.y * radius;
-		vertices[positionCounter+ ringDataOffset] = length + unitPosition.y * radius;
+		vertices[positionCounter] = (unitPosition.y * radius) + (-0.5 * length ) ;
+		vertices[positionCounter+ ringDataOffset] = (unitPosition.y * radius) + (0.5 * length);
 		positionCounter++;
 
 		vertices[positionCounter] = unitPosition.z * radius;
