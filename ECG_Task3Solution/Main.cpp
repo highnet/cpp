@@ -14,7 +14,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <vector>
+#include <list>
 
 // Prototypes 
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
@@ -29,6 +29,109 @@ void window_onMouseDown(GLFWwindow* window);
 void Window_onMouseRelease();
 double DegreesToRadians(double degrees);
 
+#define M_PI std::acos(-1.0)
+
+// ===CYLINDER===
+class CylinderMesh {
+public:
+	float vertices[180];
+	unsigned int indices[180];
+	CylinderMesh();
+	CylinderMesh(float radius, float length, float r, float g, float b,int segments);
+};
+
+CylinderMesh::CylinderMesh() {
+
+}
+
+CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b, int segments) {
+
+	//build a ring
+	int ringDataOffset = 3 * segments;
+
+	float angleIncrement = (M_PI * 2.0f) / segments;
+
+	int positionCounter = 0;
+	int indicesCounter = 0;
+	for (int i = 0; i < segments; i++) {
+		float angle = angleIncrement * i;
+		glm::vec3 unitPosition = glm::vec3(0.0f);
+		unitPosition.x = cos(angle);
+		unitPosition.y = 0.0f;
+		unitPosition.z = sin(angle);
+
+		vertices[positionCounter] = unitPosition.x * radius;
+		vertices[positionCounter+ ringDataOffset] = unitPosition.x * radius;
+		positionCounter++;
+
+		vertices[positionCounter] = unitPosition.y * radius;
+		vertices[positionCounter+ ringDataOffset] = 2 + unitPosition.y * radius;
+		positionCounter++;
+
+		vertices[positionCounter] = unitPosition.z * radius;
+		vertices[positionCounter+ ringDataOffset] = unitPosition.z * radius;
+		positionCounter++;
+
+		if (i != segments - 1) {
+
+			 indices[indicesCounter++] = i;
+			 indices[indicesCounter++] = i+1;
+			 indices[indicesCounter++] = segments + i + 1;
+
+			 indices[indicesCounter++] = i;
+			 indices[indicesCounter++] = segments + i;
+			 indices[indicesCounter++] = segments + i + 1;
+		}
+		else {
+			indices[indicesCounter++] = i;
+			indices[indicesCounter++] = 0;
+			indices[indicesCounter++] = segments;
+
+			indices[indicesCounter++] = i;
+			indices[indicesCounter++] = segments + i;
+			indices[indicesCounter++] = segments;
+		}
+	}
+}
+
+class Cylinder {
+public:
+	CylinderMesh mesh;
+	glm::mat4 transform;
+	GLuint Vao;
+	GLuint Vbo;
+	GLuint Ebo;
+	Cylinder::Cylinder(glm::mat4, float, float, float, float, float,int, GLint, GLint);
+};
+
+Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, float g, float b, int segments, GLint vertexPositions, GLint vertexColors) {
+	transform = transform;
+	mesh = CylinderMesh(radius, length, r, g, b, segments);
+	
+	glGenVertexArrays(1, &Vao); // create the VAO
+	glBindVertexArray(Vao); // bind the VAO
+	glGenBuffers(1, &Vbo); // generate the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
+	glGenBuffers(1, &Ebo); // generate the EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo); // bind the EBO
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
+
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // set vertex layout 2/2
+
+	/*
+	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
+	*/
+
+	glEnableVertexAttribArray(0); // disable the VAO
+
+
+}
+
+// ==CUBOID==
 class CuboidMesh {
 public:
 	float vertices[48];
@@ -36,6 +139,7 @@ public:
 	CuboidMesh();
 	CuboidMesh(float length, float height, float width, float r , float g , float b);
 };
+
 
 CuboidMesh::CuboidMesh() {
 
@@ -107,8 +211,9 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4, float, float, float, float, float ,float,GLint,GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght, float, float ,float,GLint,GLint); // constructor
 };
+
 Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b,GLint vertexPositions, GLint vertexColors) {
 	transform = _transform;
 	mesh = CuboidMesh(length,height,width,r,g,b);
@@ -345,15 +450,17 @@ int main(int argc, char** argv)
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		8.0f, // starting length
-		1.3f, // starting height
-		2.0f, // starting width
+		0.1f, // starting length
+		0.1f, // starting height
+		0.1f, // starting width
 		0.3f, // starting r
  		0.7f, // starting g
 		1.0f, // starting b
 		vertexPositions, // attribute ID for vertex position
 		vertexColors // atttribute ID for vertex color
 	);
+
+	Cylinder cylinder(glm::mat4(1.0f), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,30, vertexPositions, vertexColors);
 
 	//generate camera
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
@@ -481,6 +588,10 @@ int main(int argc, char** argv)
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
+			glBindVertexArray(0); // unbind VAO
+			glBindVertexArray(cylinder.Vao); //  bind cylinder VAO
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cylinder transform to shader
+			glDrawElements(GL_TRIANGLES, sizeof(cylinder.mesh.vertices), GL_UNSIGNED_INT, 0); // draw cylinder
 
 			glBindVertexArray(0); // unbind VAO
 
