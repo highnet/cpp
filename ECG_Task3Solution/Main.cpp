@@ -14,7 +14,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <list>
+#include <vector>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 
 // Prototypes 
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
@@ -34,8 +36,8 @@ double DegreesToRadians(double degrees);
 // ===CYLINDER===
 class CylinderMesh {
 public:
-	float vertices[60];
-	unsigned int indices[60];
+	std::vector<float> vertices;
+	std::vector<unsigned int> indices;
 	CylinderMesh();
 	CylinderMesh(float radius, float length, float r, float g, float b,int segments);
 };
@@ -57,50 +59,50 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		float angle = angleIncrement * i;
 		glm::vec3 unitPosition = glm::vec3(0.0f);
 		unitPosition.x = cos(angle);
-		unitPosition.y = 0.0f;
 		unitPosition.z = sin(angle);
 
-		vertices[positionCounter] = unitPosition.x * radius;
-		vertices[positionCounter+ ringDataOffset] = unitPosition.x * radius;
-		positionCounter++;
+		vertices.push_back(unitPosition.x * radius);
+		vertices.push_back((unitPosition.y * radius) + (-0.5f * length));
+		vertices.push_back(unitPosition.z * radius);
 
-		vertices[positionCounter] = (unitPosition.y * radius) + (-0.5 * length ) ;
-		vertices[positionCounter+ ringDataOffset] = (unitPosition.y * radius) + (0.5 * length);
-		positionCounter++;
+		vertices.push_back(r+ (float)rand() / RAND_MAX);
+		vertices.push_back(g+ (float)rand() / RAND_MAX);
+		vertices.push_back(b+ (float)rand() / RAND_MAX);
 
-		vertices[positionCounter] = unitPosition.z * radius;
-		vertices[positionCounter+ ringDataOffset] = unitPosition.z * radius;
-		positionCounter++;
+		if (i != segments - 1) { // NORMAL CASE face
 
-		vertices[positionCounter] = r;
-		vertices[positionCounter + ringDataOffset] = r;
-		positionCounter++;
-		vertices[positionCounter] = g;
-		vertices[positionCounter + ringDataOffset] = g;
-		positionCounter++;
-		vertices[positionCounter] = g;
-		vertices[positionCounter + ringDataOffset] = g;
-		positionCounter++;
+			indices.push_back(i);
+			indices.push_back(i+1);
+			indices.push_back(segments+i+1);
 
-		if (i != segments - 1) {
-
-			 indices[indicesCounter++] = i;
-			 indices[indicesCounter++] = i+1;
-			 indices[indicesCounter++] = segments + i + 1;
-
-			 indices[indicesCounter++] = i;
-			 indices[indicesCounter++] = segments + i;
-			 indices[indicesCounter++] = segments + i + 1;
+			indices.push_back(i);
+			indices.push_back(segments+i);
+			indices.push_back(segments+i+1);
 		}
-		else {
-			indices[indicesCounter++] = i;
-			indices[indicesCounter++] = 0;
-			indices[indicesCounter++] = segments;
+		else { // LAST CASE face
+			indices.push_back(i);
+			indices.push_back(0);
+			indices.push_back(segments);
 
-			indices[indicesCounter++] = i;
-			indices[indicesCounter++] = segments + i;
-			indices[indicesCounter++] = segments;
+			indices.push_back(i);
+			indices.push_back(segments + i);
+			indices.push_back(segments);
 		}
+	}
+
+	for (int i = 0; i < segments; i++) {
+		float angle = angleIncrement * i;
+		glm::vec3 unitPosition = glm::vec3(0.0f);
+		unitPosition.x = cos(angle);
+		unitPosition.z = sin(angle);
+
+		vertices.push_back(unitPosition.x * radius);
+		vertices.push_back((unitPosition.y * radius) + (0.5f * length));
+		vertices.push_back(unitPosition.z * radius);
+
+		vertices.push_back(r+ (float)rand() / RAND_MAX);
+		vertices.push_back(g+ (float)rand() / RAND_MAX);
+		vertices.push_back(b+ (float)rand() / RAND_MAX);
 	}
 }
 
@@ -118,25 +120,45 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 	transform = transform;
 	mesh = CylinderMesh(radius, length, r, g, b, segments);
 
+	/* 
 	int breaker = 0;
-	for (int i = 0; i < 60; i++) {
-		std::cout << mesh.vertices[i] << " ";
+	for each (float vdata in mesh.vertices)
+	{
 		breaker++;
+		std::cout << vdata << " ";
 		if (breaker == 3) {
 			breaker = 0;
 			std::cout << std::endl;
 		}
 	}
+
+	std::cout << std::endl << "---" << std::endl;
+
+	breaker = 0;
+	for each (float idata in mesh.indices)
+	{
+		breaker++;
+		std::cout << idata << " ";
+		if (breaker == 3) {
+			breaker = 0;
+			std::cout << std::endl;
+		}
+	}
+
+	std::cout << std::endl << "---" << std::endl;
+
+	*/
 	
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
+
 	glGenBuffers(1, &Vbo); // generate the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
+	glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(float), &mesh.vertices[0], GL_STATIC_DRAW);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
 	glGenBuffers(1, &Ebo); // generate the EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo); // bind the EBO
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(float), &mesh.indices[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
@@ -144,10 +166,7 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 	
-
 	glEnableVertexAttribArray(0); // disable the VAO
-
-
 }
 
 // ==CUBOID==
@@ -311,7 +330,7 @@ struct InputManager {
 // Global variables 
 InputManager Input;
 Vectors Vector3;
-const double PI = std::atan(1.0) * 4;
+const double PI = std::acos(-1.0);
 
 // Main 
 int main(int argc, char** argv)
@@ -329,6 +348,8 @@ int main(int argc, char** argv)
 	double fovy = reader.GetReal("camera", "fov", 60.0); // field of view
 	double zNear = reader.GetReal("camera", "near", 0.1); // perspective near clipping plane
 	double zFar = reader.GetReal("camera", "far", 100.0); // perspective far clipping plane
+
+	srand(time(0));
 
 	// Initialize scene 
 	if (!glfwInit()) { // initialize GLFW
@@ -480,12 +501,12 @@ int main(int argc, char** argv)
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		2.0f, // starting radius
+		0.5f, // starting radius
 		2.0f, // starting length
-		0.5f, // starting r
-		0.6f, // starting g
-		0.5f, // starting b
-		5, // number of segments (TODO: DYNAMIC MEMORY ALLOCATION!)
+		0.0f, // starting r
+		0.0f, // starting g
+		0.0f, // starting b
+		100, // number of segments
 		vertexPositions,
 		vertexColors
 	);
@@ -511,6 +532,8 @@ int main(int argc, char** argv)
 	// do pre-rendering object manipulation
 	cuboid.transform = glm::scale(cuboid.transform, glm::vec3(0.5f, 0.5f, 0.5f));
 	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	cylinder.transform = glm::rotate(cylinder.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -617,10 +640,10 @@ int main(int argc, char** argv)
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 			glBindVertexArray(0); // unbind VAO
+
 			glBindVertexArray(cylinder.Vao); //  bind cylinder VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cylinder transform to shader
-			glDrawElements(GL_TRIANGLES, sizeof(cylinder.mesh.vertices), GL_UNSIGNED_INT, 0); // draw cylinder
-
+			glDrawElements(GL_TRIANGLES, cylinder.mesh.indices.size(), GL_UNSIGNED_INT, 0); // draw cylinder
 			glBindVertexArray(0); // unbind VAO
 
 			glfwSwapBuffers(window); // swap buffer
