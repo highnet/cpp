@@ -34,8 +34,8 @@ double DegreesToRadians(double degrees);
 // ===CYLINDER===
 class CylinderMesh {
 public:
-	float vertices[180];
-	unsigned int indices[180];
+	float vertices[60];
+	unsigned int indices[60];
 	CylinderMesh();
 	CylinderMesh(float radius, float length, float r, float g, float b,int segments);
 };
@@ -47,7 +47,7 @@ CylinderMesh::CylinderMesh() {
 CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b, int segments) {
 
 	//build a ring
-	int ringDataOffset = 3 * segments;
+	int ringDataOffset = 6 * segments;
 
 	float angleIncrement = (M_PI * 2.0f) / segments;
 
@@ -65,11 +65,21 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		positionCounter++;
 
 		vertices[positionCounter] = unitPosition.y * radius;
-		vertices[positionCounter+ ringDataOffset] = 2 + unitPosition.y * radius;
+		vertices[positionCounter+ ringDataOffset] = length + unitPosition.y * radius;
 		positionCounter++;
 
 		vertices[positionCounter] = unitPosition.z * radius;
 		vertices[positionCounter+ ringDataOffset] = unitPosition.z * radius;
+		positionCounter++;
+
+		vertices[positionCounter] = r;
+		vertices[positionCounter + ringDataOffset] = r;
+		positionCounter++;
+		vertices[positionCounter] = g;
+		vertices[positionCounter + ringDataOffset] = g;
+		positionCounter++;
+		vertices[positionCounter] = g;
+		vertices[positionCounter + ringDataOffset] = g;
 		positionCounter++;
 
 		if (i != segments - 1) {
@@ -107,6 +117,16 @@ public:
 Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, float g, float b, int segments, GLint vertexPositions, GLint vertexColors) {
 	transform = transform;
 	mesh = CylinderMesh(radius, length, r, g, b, segments);
+
+	int breaker = 0;
+	for (int i = 0; i < 60; i++) {
+		std::cout << mesh.vertices[i] << " ";
+		breaker++;
+		if (breaker == 3) {
+			breaker = 0;
+			std::cout << std::endl;
+		}
+	}
 	
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -119,12 +139,11 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // set vertex layout 2/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
 
-	/*
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
-	*/
+	
 
 	glEnableVertexAttribArray(0); // disable the VAO
 
@@ -446,7 +465,6 @@ int main(int argc, char** argv)
 	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexColors = glGetAttribLocation(shaderProgram, "color"); // get attribute ID for vertex color
 
-
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
@@ -460,7 +478,17 @@ int main(int argc, char** argv)
 		vertexColors // atttribute ID for vertex color
 	);
 
-	Cylinder cylinder(glm::mat4(1.0f), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,30, vertexPositions, vertexColors);
+	Cylinder cylinder(
+		glm::mat4(1.0f), // starting transform
+		2.0f, // starting radius
+		2.0f, // starting length
+		0.5f, // starting r
+		0.6f, // starting g
+		0.5f, // starting b
+		5, // number of segments (TODO: DYNAMIC MEMORY ALLOCATION!)
+		vertexPositions,
+		vertexColors
+	);
 
 	//generate camera
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
@@ -798,7 +826,6 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 
 	return stringStream.str();
 }
-
 
 // The first parameter "eye" specifies the position of the camera
 // the second parameter "target" is the point to be centered on-screen
