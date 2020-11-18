@@ -6,6 +6,8 @@
 */
 
 #include "Utils.h"
+#include "ExtraUtils.h" // header in local directory
+
 #include <GLFW/glfw3.h>
 #include <string>
 #include <sstream>
@@ -25,11 +27,10 @@ int main(int argc, char** argv);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
-float Clamp(float f, float min, float max);
 glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 void window_onMouseDown(GLFWwindow* window);
 void Window_onMouseRelease();
-double DegreesToRadians(double degrees);
+// double DegreesToRadians(double degrees);
 
 #define M_PI std::acos(-1.0)
 
@@ -239,7 +240,6 @@ public:
 	CuboidMesh(float length, float height, float width, float r , float g , float b); // 
 };
 
-
 CuboidMesh::CuboidMesh() {
 
 }
@@ -310,7 +310,7 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heÃ­ght, float, float ,float,GLint,GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght, float, float ,float,GLint,GLint); // constructor
 };
 
 Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b,GLint vertexPositions, GLint vertexColors) {
@@ -567,7 +567,7 @@ int main(int argc, char** argv)
 		0.0f, // starting r
 		0.0f, // starting g
 		0.0f, // starting b
-		50, // number of segments
+		20, // number of segments
 		vertexPositions,
 		vertexColors
 	);
@@ -929,17 +929,4 @@ glm::mat4 Camera_LookAt(glm::vec3 positionCartesian, glm::vec3 targetPositionCar
 	};
 
 	return viewMatrix;
-}
-
-
-// the first parameter "value" specifies the floating point value to restrict inside the range defined by the min and max values
-// the second parameter "min" specifies the minimum floating point value to compare against
-// the third parameter "max" specifies The maximum floating point value to compare against.
-float Clamp(float value, float min, float max) {
-	return value <= min ? min : value >= max ? max : value;
-}
-
-// the parameter "degrees" specifies the degrees to be converted from degrees to radians
-double DegreesToRadians(double degrees) {
-	return (degrees * PI) / 180;
 }
