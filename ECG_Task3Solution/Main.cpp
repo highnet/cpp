@@ -48,7 +48,7 @@ CylinderMesh::CylinderMesh() { // default constructor
 
 CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b, int segments) {
 
-	//first build the top and bottom of the hollow cylinder tube
+	//1. first build the bottom half of the cylinder and link all the segment indices
 
 	const float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
 
@@ -95,6 +95,8 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		}
 	}
 
+
+	// 2. second build the top half of the hollow cylinder tube (no linking needed this time)
 	int i;
 	for (i = 0; i < segments; i++) { //top part
 		float angle = angleIncrement * i;  // calculate angle for this vertex
@@ -112,6 +114,7 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	}
 
 
+	// 3. build the bottom center cap vertex and link it to the bottom half of the cylinder
 	glm::vec3 bottomCapVertex = glm::vec3(0.0f, -0.5f * length, 0.0f);
 
 	vertices.push_back(bottomCapVertex.x); 
@@ -122,9 +125,9 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	vertices.push_back(g + (float)rand() / RAND_MAX); // green
 	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
 
-	int bottomCapIndex = 2 * segments;
+	int bottomCapIndex = 2 * segments; // get index of the bottom cap vertex
 
-	for (int i = 0; i < segments; i++) { // bottom cap
+	for (int i = 0; i < segments; i++) { // link bottom cap vertex to the bottom half of the cylinder
 		if (i != segments - 1) {
 			indices.push_back(bottomCapIndex);
 			indices.push_back(i);
@@ -136,6 +139,8 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 			indices.push_back(0);
 		}
 	}
+
+	// 4. build the top center cap vertex and link it to the top half of the cylinder
 	glm::vec3 topCapVertex = glm::vec3(0.0f, 0.5f * length, 0.0f);
 
 	vertices.push_back(topCapVertex.x);
@@ -146,9 +151,9 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	vertices.push_back(g + (float)rand() / RAND_MAX); // green
 	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
 	
-	int topCapIndex = 2*segments+1;
+	int topCapIndex = 2*segments+1; // get index of the top cap vetex
 
-	for (int i = segments; i < segments*2; i++) { // top cap
+	for (int i = segments; i < segments*2; i++) { // link top cap vertex to the top half of the cylinder
 		if (i != segments*2 - 1) {
 			indices.push_back(topCapIndex);
 			indices.push_back(i);
@@ -160,7 +165,6 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 			indices.push_back(segments);
 		}
 	}
-
 }
 
 class Cylinder {
@@ -563,7 +567,7 @@ int main(int argc, char** argv)
 		0.0f, // starting r
 		0.0f, // starting g
 		0.0f, // starting b
-		5, // number of segments
+		50, // number of segments
 		vertexPositions,
 		vertexColors
 	);
