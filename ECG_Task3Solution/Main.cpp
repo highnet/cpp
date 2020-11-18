@@ -36,91 +36,148 @@ double DegreesToRadians(double degrees);
 // ===CYLINDER===
 class CylinderMesh {
 public:
-	std::vector<float> vertices;
-	std::vector<unsigned int> indices;
-	CylinderMesh();
-	CylinderMesh(float radius, float length, float r, float g, float b,int segments);
+	std::vector<float> vertices; // dynamic vertices array
+	std::vector<unsigned int> indices; // dynamic indices array
+	CylinderMesh(); // default constructor
+	CylinderMesh(float radius, float length, float r, float g, float b,int segments); // cylinder mesh  constructor
 };
 
-CylinderMesh::CylinderMesh() {
+CylinderMesh::CylinderMesh() { // default constructor
 
 }
 
 CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b, int segments) {
 
-	//build a ring
-	int ringDataOffset = 6 * segments;
+	//first build the top and bottom of the hollow cylinder tube
 
-	float angleIncrement = (M_PI * 2.0f) / segments;
+	const float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
 
-	int positionCounter = 0;
-	int indicesCounter = 0;
-	for (int i = 0; i < segments; i++) {
-		float angle = angleIncrement * i;
-		glm::vec3 unitPosition = glm::vec3(0.0f);
-		unitPosition.x = cos(angle);
-		unitPosition.z = sin(angle);
+	for (int i = 0; i < segments; i++) { // bottom part
+		float angle = angleIncrement * i; // calculate angle for this vertex
+		glm::vec3 unitCirclePosition = glm::vec3(0.0f); // vertex position vector in a unit circle
+		unitCirclePosition.x = cos(angle); // x coordinate
+		unitCirclePosition.z = sin(angle); // z coordinate
 
-		vertices.push_back(unitPosition.x * radius);
-		vertices.push_back((unitPosition.y * radius) + (-0.5f * length));
-		vertices.push_back(unitPosition.z * radius);
+		vertices.push_back(unitCirclePosition.x * radius); // scale x to given radius
+		vertices.push_back((unitCirclePosition.y * radius) + (-0.5f * length)); // move the y halfway negatively and scale to given radius 
+		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius
 
-		vertices.push_back(r+ (float)rand() / RAND_MAX);
-		vertices.push_back(g+ (float)rand() / RAND_MAX);
-		vertices.push_back(b+ (float)rand() / RAND_MAX);
+		vertices.push_back(r+ (float)rand() / RAND_MAX); // red
+		vertices.push_back(g+ (float)rand() / RAND_MAX); // green
+		vertices.push_back(b+ (float)rand() / RAND_MAX); // blue
 
 		if (i != segments - 1) { // NORMAL CASE face
+			
+			// connect the dots, imagine the cylinder as a flat pancake
+			// face made of two triangles
 
+			//triangle 1
 			indices.push_back(i);
 			indices.push_back(i+1);
 			indices.push_back(segments+i+1);
 
+			//triangle 2
 			indices.push_back(i);
 			indices.push_back(segments+i);
 			indices.push_back(segments+i+1);
 		}
-		else { // LAST CASE face
+		else { // in the last case, dots connect back to the starting vertices
+
+			//triangle 1
 			indices.push_back(i);
 			indices.push_back(0);
 			indices.push_back(segments);
 
+			// triangle 2
 			indices.push_back(i);
 			indices.push_back(segments + i);
 			indices.push_back(segments);
 		}
 	}
 
-	for (int i = 0; i < segments; i++) {
-		float angle = angleIncrement * i;
-		glm::vec3 unitPosition = glm::vec3(0.0f);
-		unitPosition.x = cos(angle);
-		unitPosition.z = sin(angle);
+	int i;
+	for (i = 0; i < segments; i++) { //top part
+		float angle = angleIncrement * i;  // calculate angle for this vertex
+		glm::vec3 unitCirclePosition = glm::vec3(0.0f); // vertex position vector in a unit circle
+		unitCirclePosition.x = cos(angle); // x coordinate
+		unitCirclePosition.z = sin(angle); // z coordinate
 
-		vertices.push_back(unitPosition.x * radius);
-		vertices.push_back((unitPosition.y * radius) + (0.5f * length));
-		vertices.push_back(unitPosition.z * radius);
+		vertices.push_back(unitCirclePosition.x * radius); // scale x to given radius
+		vertices.push_back((unitCirclePosition.y * radius) + (0.5f * length)); // move the y halfway negatively and scale to given radius 
+		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius 
 
-		vertices.push_back(r+ (float)rand() / RAND_MAX);
-		vertices.push_back(g+ (float)rand() / RAND_MAX);
-		vertices.push_back(b+ (float)rand() / RAND_MAX);
+		vertices.push_back(r+ (float)rand() / RAND_MAX); // red
+		vertices.push_back(g+ (float)rand() / RAND_MAX); // green
+		vertices.push_back(b+ (float)rand() / RAND_MAX); // blue
 	}
+
+
+	glm::vec3 bottomCapVertex = glm::vec3(0.0f, -0.5f * length, 0.0f);
+
+	vertices.push_back(bottomCapVertex.x); 
+	vertices.push_back(bottomCapVertex.y);
+	vertices.push_back(bottomCapVertex.z); 
+
+	vertices.push_back(r + (float)rand() / RAND_MAX); // red
+	vertices.push_back(g + (float)rand() / RAND_MAX); // green
+	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
+
+	int bottomCapIndex = 2 * segments;
+
+	for (int i = 0; i < segments; i++) { // bottom cap
+		if (i != segments - 1) {
+			indices.push_back(bottomCapIndex);
+			indices.push_back(i);
+			indices.push_back(i + 1);
+		}
+		else {
+			indices.push_back(bottomCapIndex);
+			indices.push_back(i);
+			indices.push_back(0);
+		}
+	}
+	glm::vec3 topCapVertex = glm::vec3(0.0f, 0.5f * length, 0.0f);
+
+	vertices.push_back(topCapVertex.x);
+	vertices.push_back(topCapVertex.y);
+	vertices.push_back(topCapVertex.z);
+
+	vertices.push_back(r + (float)rand() / RAND_MAX); // red
+	vertices.push_back(g + (float)rand() / RAND_MAX); // green
+	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
+	
+	int topCapIndex = 2*segments+1;
+
+	for (int i = segments; i < segments*2; i++) { // top cap
+		if (i != segments*2 - 1) {
+			indices.push_back(topCapIndex);
+			indices.push_back(i);
+			indices.push_back(i + 1);
+		}
+		else {
+			indices.push_back(topCapIndex);
+			indices.push_back(i);
+			indices.push_back(segments);
+		}
+	}
+
 }
 
 class Cylinder {
 public:
-	CylinderMesh mesh;
-	glm::mat4 transform;
-	GLuint Vao;
-	GLuint Vbo;
-	GLuint Ebo;
-	Cylinder::Cylinder(glm::mat4, float, float, float, float, float,int, GLint, GLint);
+	CylinderMesh mesh; // mesh of the cylinder
+	glm::mat4 transform; // transform of the cylinder
+	GLuint Vao; // vertex array object
+	GLuint Vbo; // vertex buffer object
+	GLuint Ebo; // element buffer object
+	Cylinder::Cylinder(glm::mat4, float, float, float, float, float,int, GLint, GLint); // cylinder constructor
 };
 
 Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, float g, float b, int segments, GLint vertexPositions, GLint vertexColors) {
 	transform = transform;
 	mesh = CylinderMesh(radius, length, r, g, b, segments);
 
-	/* 
+	
 	int breaker = 0;
 	for each (float vdata in mesh.vertices)
 	{
@@ -147,7 +204,7 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 
 	std::cout << std::endl << "---" << std::endl;
 
-	*/
+
 	
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -172,10 +229,10 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 // ==CUBOID==
 class CuboidMesh {
 public:
-	float vertices[48];
-	unsigned int indices[36];
-	CuboidMesh();
-	CuboidMesh(float length, float height, float width, float r , float g , float b);
+	float vertices[48]; // vertices array
+	unsigned int indices[36]; // indices array
+	CuboidMesh(); // default constructor 
+	CuboidMesh(float length, float height, float width, float r , float g , float b); // 
 };
 
 
@@ -506,7 +563,7 @@ int main(int argc, char** argv)
 		0.0f, // starting r
 		0.0f, // starting g
 		0.0f, // starting b
-		100, // number of segments
+		5, // number of segments
 		vertexPositions,
 		vertexColors
 	);
