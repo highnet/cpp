@@ -6,8 +6,6 @@
 */
 
 #include "Utils.h"
-#include "ExtraUtils.h" // header in local directory
-
 #include <GLFW/glfw3.h>
 #include <string>
 #include <sstream>
@@ -17,8 +15,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
 
 // Prototypes 
 void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
@@ -27,10 +23,11 @@ int main(int argc, char** argv);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void scrollCallBack(GLFWwindow* window, double xOffset, double yOffset);
+float Clamp(float f, float min, float max);
 glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 void window_onMouseDown(GLFWwindow* window);
 void Window_onMouseRelease();
-// double DegreesToRadians(double degrees);
+double DegreesToRadians(double degrees);
 
 #define M_PI std::acos(-1.0)
 
@@ -40,7 +37,7 @@ public:
 	std::vector<float> vertices; // dynamic vertices array
 	std::vector<unsigned int> indices; // dynamic indices array
 	CylinderMesh(); // default constructor
-	CylinderMesh(float radius, float length, float r, float g, float b,int segments); // cylinder mesh  constructor
+	CylinderMesh(float radius, float length, float r, float g, float b, int segments); // cylinder mesh  constructor
 };
 
 CylinderMesh::CylinderMesh() { // default constructor
@@ -63,24 +60,24 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		vertices.push_back((unitCirclePosition.y * radius) + (-0.5f * length)); // move the y halfway negatively and scale to given radius 
 		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius
 
-		vertices.push_back(r+ (float)rand() / RAND_MAX); // red
-		vertices.push_back(g+ (float)rand() / RAND_MAX); // green
-		vertices.push_back(b+ (float)rand() / RAND_MAX); // blue
+		vertices.push_back(r); // red
+		vertices.push_back(g); // green
+		vertices.push_back(b); // blue
 
 		if (i != segments - 1) { // NORMAL CASE face
-			
+
 			// connect the dots, imagine the cylinder as a flat pancake
 			// face made of two triangles
 
 			//triangle 1
 			indices.push_back(i);
-			indices.push_back(i+1);
-			indices.push_back(segments+i+1);
+			indices.push_back(i + 1);
+			indices.push_back(segments + i + 1);
 
 			//triangle 2
 			indices.push_back(i);
-			indices.push_back(segments+i);
-			indices.push_back(segments+i+1);
+			indices.push_back(segments + i);
+			indices.push_back(segments + i + 1);
 		}
 		else { // in the last case, dots connect back to the starting vertices
 
@@ -109,22 +106,22 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 		vertices.push_back((unitCirclePosition.y * radius) + (0.5f * length)); // move the y halfway negatively and scale to given radius 
 		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius 
 
-		vertices.push_back(r+ (float)rand() / RAND_MAX); // red
-		vertices.push_back(g+ (float)rand() / RAND_MAX); // green
-		vertices.push_back(b+ (float)rand() / RAND_MAX); // blue
+		vertices.push_back(r); // red
+		vertices.push_back(g); // green
+		vertices.push_back(b); // blue
 	}
 
 
 	// 3. build the bottom center cap vertex and link it to the bottom half of the cylinder
 	glm::vec3 bottomCapVertex = glm::vec3(0.0f, -0.5f * length, 0.0f);
 
-	vertices.push_back(bottomCapVertex.x); 
+	vertices.push_back(bottomCapVertex.x);
 	vertices.push_back(bottomCapVertex.y);
-	vertices.push_back(bottomCapVertex.z); 
+	vertices.push_back(bottomCapVertex.z);
 
-	vertices.push_back(r + (float)rand() / RAND_MAX); // red
-	vertices.push_back(g + (float)rand() / RAND_MAX); // green
-	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
+	vertices.push_back(r); // red
+	vertices.push_back(g); // green
+	vertices.push_back(b); // blue
 
 	int bottomCapIndex = 2 * segments; // get index of the bottom cap vertex
 
@@ -148,14 +145,14 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	vertices.push_back(topCapVertex.y);
 	vertices.push_back(topCapVertex.z);
 
-	vertices.push_back(r + (float)rand() / RAND_MAX); // red
-	vertices.push_back(g + (float)rand() / RAND_MAX); // green
-	vertices.push_back(b + (float)rand() / RAND_MAX); // blue
-	
-	int topCapIndex = 2*segments+1; // get index of the top cap vetex
+	vertices.push_back(r); // red
+	vertices.push_back(g); // green
+	vertices.push_back(b); // blue
 
-	for (int i = segments; i < segments*2; i++) { // link top cap vertex to the top half of the cylinder
-		if (i != segments*2 - 1) {
+	int topCapIndex = 2 * segments + 1; // get index of the top cap vetex
+
+	for (int i = segments; i < segments * 2; i++) { // link top cap vertex to the top half of the cylinder
+		if (i != segments * 2 - 1) {
 			indices.push_back(topCapIndex);
 			indices.push_back(i);
 			indices.push_back(i + 1);
@@ -175,14 +172,14 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cylinder::Cylinder(glm::mat4, float, float, float, float, float,int, GLint, GLint); // cylinder constructor
+	Cylinder::Cylinder(glm::mat4, float, float, float, float, float, int, GLint, GLint); // cylinder constructor
 };
 
 Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, float g, float b, int segments, GLint vertexPositions, GLint vertexColors) {
 	transform = transform;
 	mesh = CylinderMesh(radius, length, r, g, b, segments);
 
-	
+
 	int breaker = 0;
 	for each (float vdata in mesh.vertices)
 	{
@@ -210,7 +207,7 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 	std::cout << std::endl << "---" << std::endl;
 
 
-	
+
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 
@@ -227,7 +224,7 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, float r, flo
 
 	glEnableVertexAttribArray(vertexColors); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexColors, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
-	
+
 	glEnableVertexAttribArray(0); // disable the VAO
 }
 
@@ -237,35 +234,35 @@ public:
 	float vertices[48]; // vertices array
 	unsigned int indices[36]; // indices array
 	CuboidMesh(); // default constructor 
-	CuboidMesh(float length, float height, float width, float r , float g , float b); // 
+	CuboidMesh(float length, float height, float width, float r, float g, float b); // 
 };
 
 CuboidMesh::CuboidMesh() {
 
 }
 
-CuboidMesh::CuboidMesh(float length, float height, float width,float r, float g, float b) {
+CuboidMesh::CuboidMesh(float length, float width, float height, float r, float g, float b) {
 
 	// generate unit cuboid vertices coordinates
-	vertices[0] = -0.5;  vertices[1] = 0.5;   vertices[2] = 0.5;   
-	vertices[6] = 0.5;   vertices[7] = 0.5;   vertices[8] = 0.5;  
-	vertices[12] = -0.5; vertices[13] = -0.5; vertices[14] = 0.5; 
-	vertices[18] = 0.5;  vertices[19] = -0.5; vertices[20] = 0.5;  
-	vertices[24] = -0.5; vertices[25] = 0.5;  vertices[26] = -0.5; 
-	vertices[30] = 0.5;  vertices[31] = 0.5;  vertices[32] = -0.5; 
-	vertices[36] = -0.5; vertices[37] = -0.5; vertices[38] = -0.5; 
-	vertices[42] = 0.5;  vertices[43] = -0.5; vertices[44] = -0.5; 
-	
+	vertices[0] = -0.5;  vertices[1] = 0.5;   vertices[2] = 0.5;
+	vertices[6] = 0.5;   vertices[7] = 0.5;   vertices[8] = 0.5;
+	vertices[12] = -0.5; vertices[13] = -0.5; vertices[14] = 0.5;
+	vertices[18] = 0.5;  vertices[19] = -0.5; vertices[20] = 0.5;
+	vertices[24] = -0.5; vertices[25] = 0.5;  vertices[26] = -0.5;
+	vertices[30] = 0.5;  vertices[31] = 0.5;  vertices[32] = -0.5;
+	vertices[36] = -0.5; vertices[37] = -0.5; vertices[38] = -0.5;
+	vertices[42] = 0.5;  vertices[43] = -0.5; vertices[44] = -0.5;
+
 	// apply linear transformations and colors
 	int counter = 0;
 	for (int i = 0; i < 48; i++) {
 		switch (counter) {
 		case 0:
-			vertices[i] *= height;
+			vertices[i] *= length;
 			counter++;
 			break;
 		case 1:
-			vertices[i] *= length;
+			vertices[i] *= height;
 			counter++;
 			break;
 		case 2:
@@ -310,12 +307,12 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght, float, float ,float,GLint,GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heÃ­ght, float, float, float, GLint, GLint); // constructor
 };
 
-Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g , float b,GLint vertexPositions, GLint vertexColors) {
+Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height, float r, float g, float b, GLint vertexPositions, GLint vertexColors) {
 	transform = _transform;
-	mesh = CuboidMesh(length,height,width,r,g,b);
+	mesh = CuboidMesh(length, height, width, r, g, b);
 
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -393,6 +390,9 @@ InputManager Input;
 Vectors Vector3;
 const double PI = std::acos(-1.0);
 
+bool wireframeMode = false;
+bool backFaceCullingMode = false;
+
 // Main 
 int main(int argc, char** argv)
 {
@@ -409,8 +409,6 @@ int main(int argc, char** argv)
 	double fovy = reader.GetReal("camera", "fov", 60.0); // field of view
 	double zNear = reader.GetReal("camera", "near", 0.1); // perspective near clipping plane
 	double zFar = reader.GetReal("camera", "far", 100.0); // perspective far clipping plane
-
-	srand(time(0));
 
 	// Initialize scene 
 	if (!glfwInit()) { // initialize GLFW
@@ -550,30 +548,30 @@ int main(int argc, char** argv)
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		0.1f, // starting length
-		0.1f, // starting height
-		0.1f, // starting width
-		0.3f, // starting r
- 		0.7f, // starting g
-		1.0f, // starting b
+		1.2f, // starting length
+		2.0f, // starting height
+		1.2f, // starting width
+		0.8f, // starting r
+		0.1f, // starting g
+		0.2f, // starting b
 		vertexPositions, // attribute ID for vertex position
 		vertexColors // atttribute ID for vertex color
 	);
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		0.5f, // starting radius
+		0.6f, // starting radius
 		2.0f, // starting length
-		0.0f, // starting r
-		0.0f, // starting g
-		0.0f, // starting b
-		20, // number of segments
+		0.2f, // starting r
+		0.7f, // starting g
+		0.4f, // starting b
+		16, // number of segments
 		vertexPositions,
 		vertexColors
 	);
 
 	//generate camera
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // set the as background color
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -591,10 +589,10 @@ int main(int argc, char** argv)
 
 
 	// do pre-rendering object manipulation
-	cuboid.transform = glm::scale(cuboid.transform, glm::vec3(0.5f, 0.5f, 0.5f));
-	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	cylinder.transform = glm::rotate(cylinder.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 0.0f, 1.0f));
+	
+	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 1.0f, 0.0f));
+	cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
+	cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -677,6 +675,7 @@ int main(int argc, char** argv)
 
 				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1, 1); // clamp values to avoid gimbal lock
 			}
+
 			//handle cameras
 			float newCameraZ = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * cos(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
 			float newCameraX = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * sin(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
@@ -696,6 +695,23 @@ int main(int argc, char** argv)
 
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
+
+			GLenum mode;
+			if (wireframeMode) {
+				mode = GL_LINE;
+			}
+			else {
+				mode = GL_FILL;
+			}
+
+			if (backFaceCullingMode) {
+				glEnable(GL_CULL_FACE);
+			}
+			else {
+				glDisable(GL_CULL_FACE);
+			}
+			glPolygonMode(GL_FRONT_AND_BACK, mode);
+
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
@@ -806,6 +822,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		Input.RIGHT_KEY_PRESSED = FALSE;
 	}
 
+	if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+		wireframeMode = !wireframeMode;
+	}
+
+	if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
+
+		backFaceCullingMode = !backFaceCullingMode;
+	}
 }
 
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
@@ -929,4 +953,16 @@ glm::mat4 Camera_LookAt(glm::vec3 positionCartesian, glm::vec3 targetPositionCar
 	};
 
 	return viewMatrix;
+}
+
+// the first parameter "value" specifies the floating point value to restrict inside the range defined by the min and max values
+// the second parameter "min" specifies the minimum floating point value to compare against
+// the third parameter "max" specifies The maximum floating point value to compare against.
+float Clamp(float value, float min, float max) {
+	return value <= min ? min : value >= max ? max : value;
+}
+
+// the parameter "degrees" specifies the degrees to be converted from degrees to radians
+double DegreesToRadians(double degrees) {
+	return (degrees * PI) / 180;
 }
