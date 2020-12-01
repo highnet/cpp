@@ -44,77 +44,9 @@ CylinderMesh::CylinderMesh() { // default constructor
 
 }
 
-CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b, int segments) {
+CylinderMesh::CylinderMesh(float radius, float height, float r, float g, float b, int segments) {
 
-	//1. first build the bottom half of the cylinder and link all the segment indices
-
-	const float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
-
-	for (int i = 0; i < segments; i++) { // bottom part
-		float angle = angleIncrement * i; // calculate angle for this vertex
-		glm::vec3 unitCirclePosition = glm::vec3(0.0f); // vertex position vector in a unit circle
-		unitCirclePosition.x = cos(angle); // x coordinate
-		unitCirclePosition.z = sin(angle); // z coordinate
-
-		vertices.push_back(unitCirclePosition.x * radius); // scale x to given radius
-		vertices.push_back((unitCirclePosition.y * radius) + (-0.5f * length)); // move the y halfway negatively and scale to given radius 
-		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius
-
-		vertices.push_back(r); // red
-		vertices.push_back(g); // green
-		vertices.push_back(b); // blue
-
-		if (i != segments - 1) { // NORMAL CASE face
-
-			// connect the dots, imagine the cylinder as a flat pancake
-			// face made of two triangles
-
-			//triangle 1
-			indices.push_back(i);
-			indices.push_back(i + 1);
-			indices.push_back(segments + i + 1);
-
-			//triangle 2
-			indices.push_back(i);
-			indices.push_back(segments + i);
-			indices.push_back(segments + i + 1);
-		}
-		else { // in the last case, dots connect back to the starting vertices
-
-			//triangle 1
-			indices.push_back(i);
-			indices.push_back(0);
-			indices.push_back(segments);
-
-			// triangle 2
-			indices.push_back(i);
-			indices.push_back(segments + i);
-			indices.push_back(segments);
-		}
-	}
-
-
-	// 2. second build the top half of the hollow cylinder tube (no linking needed this time)
-	int i;
-	for (i = 0; i < segments; i++) { //top part
-		float angle = angleIncrement * i;  // calculate angle for this vertex
-		glm::vec3 unitCirclePosition = glm::vec3(0.0f); // vertex position vector in a unit circle
-		unitCirclePosition.x = cos(angle); // x coordinate
-		unitCirclePosition.z = sin(angle); // z coordinate
-
-		vertices.push_back(unitCirclePosition.x * radius); // scale x to given radius
-		vertices.push_back((unitCirclePosition.y * radius) + (0.5f * length)); // move the y halfway negatively and scale to given radius 
-		vertices.push_back(unitCirclePosition.z * radius); // scale the z to given radius 
-
-		vertices.push_back(r); // red
-		vertices.push_back(g); // green
-		vertices.push_back(b); // blue
-	}
-
-
-	// 3. build the bottom center cap vertex and link it to the bottom half of the cylinder
-	glm::vec3 bottomCapVertex = glm::vec3(0.0f, -0.5f * length, 0.0f);
-
+	glm::vec3 bottomCapVertex = glm::vec3(0.0f, -0.5f * height, 0.0f);
 	vertices.push_back(bottomCapVertex.x);
 	vertices.push_back(bottomCapVertex.y);
 	vertices.push_back(bottomCapVertex.z);
@@ -123,24 +55,7 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	vertices.push_back(g); // green
 	vertices.push_back(b); // blue
 
-	int bottomCapIndex = 2 * segments; // get index of the bottom cap vertex
-
-	for (int i = 0; i < segments; i++) { // link bottom cap vertex to the bottom half of the cylinder
-		if (i != segments - 1) {
-			indices.push_back(bottomCapIndex);
-			indices.push_back(i);
-			indices.push_back(i + 1);
-		}
-		else {
-			indices.push_back(bottomCapIndex);
-			indices.push_back(i);
-			indices.push_back(0);
-		}
-	}
-
-	// 4. build the top center cap vertex and link it to the top half of the cylinder
-	glm::vec3 topCapVertex = glm::vec3(0.0f, 0.5f * length, 0.0f);
-
+	glm::vec3 topCapVertex = glm::vec3(0.0f, 0.5f * height, 0.0f);
 	vertices.push_back(topCapVertex.x);
 	vertices.push_back(topCapVertex.y);
 	vertices.push_back(topCapVertex.z);
@@ -149,19 +64,54 @@ CylinderMesh::CylinderMesh(float radius, float length, float r, float g, float b
 	vertices.push_back(g); // green
 	vertices.push_back(b); // blue
 
-	int topCapIndex = 2 * segments + 1; // get index of the top cap vetex
+	const float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
 
-	for (int i = segments; i < segments * 2; i++) { // link top cap vertex to the top half of the cylinder
-		if (i != segments * 2 - 1) {
-			indices.push_back(topCapIndex);
-			indices.push_back(i);
-			indices.push_back(i + 1);
-		}
-		else {
-			indices.push_back(topCapIndex);
-			indices.push_back(i);
-			indices.push_back(segments);
-		}
+	for (int i = 0; i < segments; i++) {
+		glm::vec3 circlePosition = glm::vec3(
+			cos(i * angleIncrement) * radius,
+			-height / 2.0f,
+			sin(i * angleIncrement) * radius
+		);
+
+		// bottom ring vertex
+		vertices.push_back(circlePosition.x);
+		vertices.push_back((circlePosition.y));
+		vertices.push_back(circlePosition.z);
+
+		vertices.push_back(r); // red
+		vertices.push_back(g); // green
+		vertices.push_back(b); // blue
+
+		// top ring vertex
+		circlePosition.y = height / 2.0f;
+		vertices.push_back(circlePosition.x);
+		vertices.push_back((circlePosition.y));
+		vertices.push_back(circlePosition.z);
+
+		vertices.push_back(r); // red
+		vertices.push_back(g); // green
+		vertices.push_back(b); // blue
+		
+		
+		// bottom face
+		indices.push_back(0);
+		indices.push_back(2 + i * 2);
+		indices.push_back(i == segments - 1 ? 2 : 2 + (i + 1) * 2);
+
+		// top face
+		indices.push_back(1);
+		indices.push_back(i == segments - 1 ? 3 : 3 + (i + 1) * 2);
+		indices.push_back(3 + i * 2);
+		
+		// side faces
+		indices.push_back(2 + i * 2);
+		indices.push_back(i == segments - 1 ? 3 : 3 + (i + 1) * 2);
+		indices.push_back(i == segments - 1 ? 2 : 2 + (i + 1) * 2);
+		
+		indices.push_back(i == segments - 1 ? 3 : 3 + (i + 1) * 2);
+		indices.push_back(2 + i * 2);
+		indices.push_back(3 + i * 2);
+		
 	}
 }
 
@@ -244,14 +194,14 @@ CuboidMesh::CuboidMesh() {
 CuboidMesh::CuboidMesh(float length, float width, float height, float r, float g, float b) {
 
 	// generate unit cuboid vertices coordinates
-	vertices[0] = -0.5;  vertices[1] = 0.5;   vertices[2] = 0.5;
-	vertices[6] = 0.5;   vertices[7] = 0.5;   vertices[8] = 0.5;
-	vertices[12] = -0.5; vertices[13] = -0.5; vertices[14] = 0.5;
-	vertices[18] = 0.5;  vertices[19] = -0.5; vertices[20] = 0.5;
-	vertices[24] = -0.5; vertices[25] = 0.5;  vertices[26] = -0.5;
-	vertices[30] = 0.5;  vertices[31] = 0.5;  vertices[32] = -0.5;
-	vertices[36] = -0.5; vertices[37] = -0.5; vertices[38] = -0.5;
-	vertices[42] = 0.5;  vertices[43] = -0.5; vertices[44] = -0.5;
+	vertices[0] = -0.5;  vertices[1] = -0.5;   vertices[2] = 0.5;
+	vertices[6] = 0.5;   vertices[7] = -0.5;   vertices[8] = 0.5;
+	vertices[12] = 0.5; vertices[13] = 0.5; vertices[14] = 0.5;
+	vertices[18] = -0.5;  vertices[19] = 0.5; vertices[20] = 0.5;
+	vertices[24] = 0.5; vertices[25] = -0.5;  vertices[26] = -0.5;
+	vertices[30] = -0.5;  vertices[31] = -0.5;  vertices[32] = -0.5;
+	vertices[36] = -0.5; vertices[37] = 0.5; vertices[38] = -0.5;
+	vertices[42] = 0.5;  vertices[43] = 0.5; vertices[44] = -0.5;
 
 	// apply linear transformations and colors
 	int counter = 0;
@@ -286,17 +236,17 @@ CuboidMesh::CuboidMesh(float length, float width, float height, float r, float g
 
 	// specify faces
 	indices[0] = 0;  indices[1] = 1; indices[2] = 2;
-	indices[3] = 1;  indices[4] = 2; indices[5] = 3;
-	indices[6] = 2;  indices[7] = 3; indices[8] = 6;
-	indices[9] = 3;  indices[10] = 6; indices[11] = 7;
-	indices[12] = 4; indices[13] = 6; indices[14] = 7;
-	indices[15] = 4; indices[16] = 5; indices[17] = 7;
-	indices[18] = 0; indices[19] = 4; indices[20] = 5;
-	indices[21] = 0; indices[22] = 1; indices[23] = 5;
-	indices[24] = 1; indices[25] = 3; indices[26] = 7;
-	indices[27] = 1; indices[28] = 5; indices[29] = 7;
-	indices[30] = 0; indices[31] = 2; indices[32] = 4;
-	indices[33] = 2; indices[34] = 4; indices[35] = 6;
+	indices[3] = 2;  indices[4] = 3; indices[5] = 0;
+	indices[6] = 4;  indices[7] = 5; indices[8] = 6;
+	indices[9] = 6;  indices[10] = 7; indices[11] = 4;
+	indices[12] = 1; indices[13] = 4; indices[14] = 7;
+	indices[15] = 7; indices[16] = 2; indices[17] = 1;
+	indices[18] = 5; indices[19] = 0; indices[20] = 3;
+	indices[21] = 3; indices[22] = 6; indices[23] = 5;
+	indices[24] = 6; indices[25] = 3; indices[26] = 2;
+	indices[27] = 2; indices[28] = 7; indices[29] = 6;
+	indices[30] = 5; indices[31] = 4; indices[32] = 1;
+	indices[33] = 1; indices[34] = 0; indices[35] = 5;
 
 }
 
@@ -565,7 +515,7 @@ int main(int argc, char** argv)
 		0.2f, // starting r
 		0.7f, // starting g
 		0.4f, // starting b
-		16, // number of segments
+		4, // number of segments
 		vertexPositions,
 		vertexColors
 	);
@@ -673,7 +623,7 @@ int main(int argc, char** argv)
 					mainCamera.orbitalInclination += mainCamera.orbitalSpeed; // decrease inclination by inclination speed
 				}
 
-				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1, 1); // clamp values to avoid gimbal lock
+				mainCamera.orbitalInclination = Clamp(mainCamera.orbitalInclination, -1.5f, 1.5f); // clamp values to avoid gimbal lock
 			}
 
 			//handle cameras
