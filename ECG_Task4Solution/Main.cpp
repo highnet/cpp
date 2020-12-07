@@ -31,6 +31,84 @@ double DegreesToRadians(double degrees);
 
 #define M_PI std::acos(-1.0)
 
+class LightSourceCubeMesh {
+public:
+	float vertices[108] = {
+	-0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	-0.5f,  0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+
+	-0.5f, -0.5f,  0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+	-0.5f, -0.5f,  0.5f,
+
+	-0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+	-0.5f, -0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+
+	-0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f, -0.5f,  0.5f,
+	-0.5f, -0.5f,  0.5f,
+	-0.5f, -0.5f, -0.5f,
+
+	-0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f, -0.5f
+	};
+	LightSourceCubeMesh();
+};
+
+LightSourceCubeMesh::LightSourceCubeMesh() {
+
+}
+
+class LightSourceCube {
+public:
+	glm::mat4 transform;
+	LightSourceCubeMesh mesh;
+	GLuint Vao; // vertex array object
+	GLuint Vbo; // vertex buffer object
+	LightSourceCube();
+	LightSourceCube(glm::mat4,GLint);
+};
+
+LightSourceCube::LightSourceCube() {
+
+}
+
+LightSourceCube::LightSourceCube(glm::mat4 transform,GLint vertexPositions) {
+	mesh = LightSourceCubeMesh();
+	glGenVertexArrays(1, &Vao);
+	glBindVertexArray(Vao);
+	glGenBuffers(1, &Vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, Vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // set vertex layout 2/2
+	glEnableVertexAttribArray(0);
+}
+
 // ===CYLINDER===
 class CylinderMesh {
 public:
@@ -112,7 +190,6 @@ public:
 Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, GLint vertexPositions) {
 	transform = transform;
 	mesh = CylinderMesh(radius, length,segments);
-
 
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -442,7 +519,7 @@ int main(int argc, char** argv)
 
 
 	//generate camera
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set the as background color
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -464,6 +541,11 @@ int main(int argc, char** argv)
 	cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
 	
 	cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
+
+	LightSourceCube lightSourceCube(
+		glm::mat4(1.0f),
+		vertexPositions
+	);
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -589,12 +671,18 @@ int main(int argc, char** argv)
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 			glBindVertexArray(0); // unbind VAO
 		
-			
 			glBindVertexArray(cylinder.Vao); //  bind cylinder VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cylinder transform to shader
 			glUniform4f(color, 0.2, 0, 0.2, 1.0); // push color to shader
 			glDrawElements(GL_TRIANGLES, cylinder.mesh.indices.size(), GL_UNSIGNED_INT, 0); // draw cylinder
 			glBindVertexArray(0); // unbind VAO
+
+			glBindVertexArray(lightSourceCube.Vao);
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(lightSourceCube.transform)); // push cylinder transform to shader
+			glUniform4f(color, 1.0, 1.0, 1.0, 1.0); // push color to shader
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0); // unbind VAO
+
 			
 			glfwSwapBuffers(window); // swap buffer
 		}
