@@ -48,76 +48,78 @@ Material::Material(float r, float g, float b) {
 	baseColor.z = b;
 }
 
-class LightSourceCubeMesh {
+class PointLightSourceCubeMesh {
 public:
 	float vertices[108] = {
-	-0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	-0.5f,  0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
+	 -0.5f,-0.5f,0.5f,// 0
+	 0.5f,-0.5f,0.5f,// 1
+	 0.5f,0.5f,0.5f,// 2
+	 0.5f,0.5f,0.5f,// 2
+	 -0.5f,0.5f,0.5f,// 3 
+	 -0.5f,-0.5f,0.5f,// 0
 
-	-0.5f, -0.5f,  0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-	-0.5f, -0.5f,  0.5f,
+	 0.5f,-0.5f,-0.5f,// 4
+	 -0.5f,-0.5f,-0.5f,// 5
+	 -0.5f,0.5f,-0.5f,// 6
+	 -0.5f,0.5f,-0.5f,// 6
+	 0.5f,0.5f,-0.5f,// 7
+	 0.5f,-0.5f,-0.5f,// 4
 
-	-0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
-	-0.5f, -0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
+	 0.5f,-0.5f,0.5f,// 1 
+	 0.5f,-0.5f,-0.5f,// 4
+	 0.5f,0.5f,-0.5f,// 7
+	 0.5f,0.5f,-0.5f,// 7
+	 0.5f,0.5f,0.5f, // 2
+	 0.5f,-0.5f,0.5f,// 1
 
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
+	 -0.5f,-0.5f,-0.5f,// 5
+	 -0.5f,-0.5f,0.5f, // 0
+	 -0.5f,0.5f,0.5f,// 3
+	 -0.5f,0.5f,0.5f,// 3
+	 -0.5f,0.5f,-0.5f,// 6
+	 -0.5f,-0.5f,-0.5f,// 5
 
-	-0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f, -0.5f,  0.5f,
-	-0.5f, -0.5f,  0.5f,
-	-0.5f, -0.5f, -0.5f,
+	 -0.5f,0.5f,-0.5f,// 6
+	 -0.5f,0.5f,0.5f,// 3
+	 0.5f,0.5f,0.5f,// 2
+	 0.5f,0.5f,0.5f,// 2
+	 0.5f,0.5f,-0.5f,// 7
+	 -0.5f,0.5f,-0.5f,// 6
 
-	-0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f, -0.5f
+	 -0.5f,-0.5f,-0.5f,// 5
+	 0.5f,-0.5f,-0.5f,// 4
+	 0.5f,-0.5f,0.5f,// 1
+	 0.5f,-0.5f,0.5f,// 1
+	 -0.5f,-0.5f,0.5f,// 0
+	 -0.5f,-0.5f,-0.5f,// 5
 	};
-	LightSourceCubeMesh();
+	PointLightSourceCubeMesh();
 };
 
-LightSourceCubeMesh::LightSourceCubeMesh() {
+PointLightSourceCubeMesh::PointLightSourceCubeMesh() {
 
 }
 
-class LightSourceCube {
+class PointLightSource {
 public:
 	glm::mat4 transform;
-	LightSourceCubeMesh mesh;
+	PointLightSourceCubeMesh mesh;
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
-	LightSourceCube();
-	LightSourceCube(glm::mat4,glm::vec3, GLint);
-	glm::vec3 albedo;
+	PointLightSource();
+	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint);
+	glm::vec3 color;
+	glm::vec3 position;
 };
 
-LightSourceCube::LightSourceCube() {
+PointLightSource::PointLightSource() {
 
 }
 
-LightSourceCube::LightSourceCube(glm::mat4 transform,glm::vec3 _albedo, GLint vertexPositions) {
-	albedo = _albedo;
-	mesh = LightSourceCubeMesh();
+PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions) {
+	color = _color;
+	position = _position;
+	mesh = PointLightSourceCubeMesh();
 	glGenVertexArrays(1, &Vao);
 	glBindVertexArray(Vao);
 	glGenBuffers(1, &Vbo);
@@ -244,32 +246,40 @@ CuboidMesh::CuboidMesh() {
 CuboidMesh::CuboidMesh(float length, float width, float height) {
 
 	// generate unit cuboid vertices coordinates
-	vertices[0] = -width / 2.0f;  vertices[1] = -height / 2.0f;   vertices[2] = length / 2.0f;
-	vertices[3] = width / 2.0f;   vertices[4] = -height / 2.0f;   vertices[5] = length / 2.0f;
-	vertices[6] = width / 2.0f; vertices[7] = height / 2.0f; vertices[8] = length / 2.0f;
-	vertices[9] = -width / 2.0f;  vertices[10] = height / 2.0f; vertices[11] = length / 2.0f;
-	vertices[12] = width / 2.0f; vertices[13] = -height / 2.0f;  vertices[14] = -length / 2.0f;
-	vertices[15] = -width / 2.0f;  vertices[16] = -height / 2.0f;  vertices[17] = -length / 2.0f;
-	vertices[18] = -width / 2.0f; vertices[19] = height / 2.0f; vertices[20] = -length / 2.0f;
-	vertices[21] = width / 2.0f;  vertices[22] = height / 2.0f; vertices[23] = -length / 2.0f;
+	vertices[0] = -width / 2.0f;  vertices[1] = -height / 2.0f;   vertices[2] = length / 2.0f; //v0
+	vertices[3] = width / 2.0f;   vertices[4] = -height / 2.0f;   vertices[5] = length / 2.0f; //v1
+	vertices[6] = width / 2.0f; vertices[7] = height / 2.0f; vertices[8] = length / 2.0f; // v2
+	vertices[9] = -width / 2.0f;  vertices[10] = height / 2.0f; vertices[11] = length / 2.0f; // v3
+	vertices[12] = width / 2.0f; vertices[13] = -height / 2.0f;  vertices[14] = -length / 2.0f; // v4
+	vertices[15] = -width / 2.0f;  vertices[16] = -height / 2.0f;  vertices[17] = -length / 2.0f; // v5
+	vertices[18] = -width / 2.0f; vertices[19] = height / 2.0f; vertices[20] = -length / 2.0f;  // v6
+	vertices[21] = width / 2.0f;  vertices[22] = height / 2.0f; vertices[23] = -length / 2.0f; // v7
 
+	int breaker = 0;
+	for (int i = 0; i < 24; i++) {
+		std::cout << vertices[i] << ", ";
+		if (breaker++ == 2) {
+			std::cout << std::endl;
+			breaker = 0;
+		}
+	}
 	// specify faces
-	indices[0] = 0;  indices[1] = 1; indices[2] = 2;
+	indices[0] = 0;  indices[1] = 1; indices[2] = 2; // face 0
 	indices[3] = 2;  indices[4] = 3; indices[5] = 0;
 
-	indices[6] = 4;  indices[7] = 5; indices[8] = 6;
+	indices[6] = 4;  indices[7] = 5; indices[8] = 6; // face 1
 	indices[9] = 6;  indices[10] = 7; indices[11] = 4;
 
-	indices[12] = 1; indices[13] = 4; indices[14] = 7;
+	indices[12] = 1; indices[13] = 4; indices[14] = 7; // face 2 
 	indices[15] = 7; indices[16] = 2; indices[17] = 1;
 
-	indices[18] = 5; indices[19] = 0; indices[20] = 3;
+	indices[18] = 5; indices[19] = 0; indices[20] = 3; // face 3 
 	indices[21] = 3; indices[22] = 6; indices[23] = 5;
 
-	indices[24] = 6; indices[25] = 3; indices[26] = 2;
+	indices[24] = 6; indices[25] = 3; indices[26] = 2; // face 4
 	indices[27] = 2; indices[28] = 7; indices[29] = 6;
 
-	indices[30] = 5; indices[31] = 4; indices[32] = 1;
+	indices[30] = 5; indices[31] = 4; indices[32] = 1; // face 5
 	indices[33] = 1; indices[34] = 0; indices[35] = 5;
 }
 
@@ -522,17 +532,17 @@ int main(int argc, char** argv)
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		1.2f, // starting length
-		2.0f, // starting height
-		1.2f, // starting width
-		1.0f,
-		0.5f,
-		1.0f,
+		1.0f, // starting length
+		1.0f, // starting height
+		1.0f, // starting width
+		0.25f,
+		0.25f,
+		0.25f,
 		vertexPositions // attribute ID for vertex position
 	);
 
 
-
+	/*
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
 		0.6f, // starting radius
@@ -540,7 +550,7 @@ int main(int argc, char** argv)
 		7, // number of segments
 		vertexPositions
 	);
-
+	*/
 
 	//generate camera
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // set the as background color
@@ -564,13 +574,18 @@ int main(int argc, char** argv)
 	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 1.0f, 0.0f));
 	cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
 
-	cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
+	// cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
 
-	LightSourceCube lightSourceCube(
+
+	PointLightSource pointLightSource(
 		glm::mat4(1.0f), // transform
-		glm::vec3(0.5f, 0.5f, 0.5f), //albedo
+		glm::vec3(1.0f, 1.0f, 0.0f), //color
+		glm::vec3(1.2f, 1.0f, 2.0f), // position
 		vertexPositions
 	);
+
+	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
+	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(0.25f, 0.25f, 0.25f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -690,7 +705,7 @@ int main(int argc, char** argv)
 			}
 			glPolygonMode(GL_FRONT_AND_BACK, mode);
 
-			glUniform4f(lightColor, lightSourceCube.albedo.x, lightSourceCube.albedo.y, lightSourceCube.albedo.z, 1.0); // push color to shader
+			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
@@ -698,15 +713,17 @@ int main(int argc, char** argv)
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 			glBindVertexArray(0); // unbind VAO
 
+			/*
 			glBindVertexArray(cylinder.Vao); //  bind cylinder VAO
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cylinder transform to shader
-			glUniform4f(objectColor, 0.2, 0, 0.2, 1.0); // push color to shader
+			glUniform4f(objectColor, 0.0, 1.0, 0.0, 0.0); // push color to shader
 			glDrawElements(GL_TRIANGLES, cylinder.mesh.indices.size(), GL_UNSIGNED_INT, 0); // draw cylinder
 			glBindVertexArray(0); // unbind VAO
+			*/
 
-			glBindVertexArray(lightSourceCube.Vao);
-			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(lightSourceCube.transform)); // push cylinder transform to shader
-			glUniform4f(objectColor, lightSourceCube.albedo.x, lightSourceCube.albedo.y, lightSourceCube.albedo.z, 1.0); // push color to shader
+			glBindVertexArray(pointLightSource.Vao);
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
+			glUniform4f(objectColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
 
