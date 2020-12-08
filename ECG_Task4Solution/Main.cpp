@@ -255,14 +255,6 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 	vertices[18] = -width / 2.0f; vertices[19] = height / 2.0f; vertices[20] = -length / 2.0f;  // v6
 	vertices[21] = width / 2.0f;  vertices[22] = height / 2.0f; vertices[23] = -length / 2.0f; // v7
 
-	int breaker = 0;
-	for (int i = 0; i < 24; i++) {
-		std::cout << vertices[i] << ", ";
-		if (breaker++ == 2) {
-			std::cout << std::endl;
-			breaker = 0;
-		}
-	}
 	// specify faces
 	indices[0] = 0;  indices[1] = 1; indices[2] = 2; // face 0
 	indices[3] = 2;  indices[4] = 3; indices[5] = 0;
@@ -439,79 +431,80 @@ int main(int argc, char** argv)
 	glfwSetMouseButtonCallback(window, mouseCallback); // set callback for mouse buttons
 	glfwSetScrollCallback(window, scrollCallBack); // set callback for scroll wheel
 
+
+	//////////////////////////////////////////////////////////////LIGHTING SHADER///////////////////////////////////////////////////////////
 	// Compile Vertex Shader 
 	const char* vertexSource; // create character list
-	GLuint vertexShader; // create vertex shader id
-	std::ifstream is_vs("assets/teapotRenderer.vert"); // read shader file
+	GLuint lightingVertexShader; // create vertex shader id
+	std::ifstream is_vs("assets/LightingShader.vert"); // read shader file
 	const std::string f_vs((std::istreambuf_iterator<char>(is_vs)), std::istreambuf_iterator<char>()); // string buffer
 	vertexSource = f_vs.c_str(); // convert character list to string
-	vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
-	glShaderSource(vertexShader, 1, &vertexSource, 0); // link source
-	glCompileShader(vertexShader); // Compile the vertex shader
+	lightingVertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
+	glShaderSource(lightingVertexShader, 1, &vertexSource, 0); // link source
+	glCompileShader(lightingVertexShader); // Compile the vertex shader
 
 	// Check for vs errors
 	GLint succeded_vs;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &succeded_vs);
+	glGetShaderiv(lightingVertexShader, GL_COMPILE_STATUS, &succeded_vs);
 	if (succeded_vs == GL_FALSE) {
 		GLint logSize;
-		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logSize);
+		glGetShaderiv(lightingVertexShader, GL_INFO_LOG_LENGTH, &logSize);
 		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(vertexShader, logSize, NULL, message);
+		glGetShaderInfoLog(lightingVertexShader, logSize, NULL, message);
 		std::cerr << message;
 		delete[] message;
 	}
 
 	// Compile Fragment Shader 
 	const char* fragmentSource; // create character list 
-	GLuint fragmentShader; // create frament shader id
-	std::ifstream is_fs("assets/teapotRenderer.frag");// read shader file
+	GLuint lightingFragmentShader; // create frament shader id
+	std::ifstream is_fs("assets/LightingShader.frag");// read shader file
 	const std::string f_fs((std::istreambuf_iterator<char>(is_fs)), std::istreambuf_iterator<char>()); // string buffer
 	fragmentSource = f_fs.c_str(); // conver character list to string
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
-	glShaderSource(fragmentShader, 1, &fragmentSource, 0); //link source
-	glCompileShader(fragmentShader); // Compile the fragment shader
+	lightingFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
+	glShaderSource(lightingFragmentShader, 1, &fragmentSource, 0); //link source
+	glCompileShader(lightingFragmentShader); // Compile the fragment shader
 
 	// Check for fs errors
 	GLint succeded_fs;
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &succeded_fs);
+	glGetShaderiv(lightingFragmentShader, GL_COMPILE_STATUS, &succeded_fs);
 	if (succeded_fs == GL_FALSE) {
 		GLint logSize;
-		glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+		glGetShaderiv(lightingFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
 		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(fragmentShader, logSize, NULL, message);
+		glGetShaderInfoLog(lightingFragmentShader, logSize, NULL, message);
 		std::cerr << message;
 		delete[] message;
 	}
 
 	// Compile Shader Program 
-	GLuint shaderProgram; // create shader program id
-	shaderProgram = glCreateProgram(); // create program
-	glAttachShader(shaderProgram, vertexShader); // attach shader
-	glAttachShader(shaderProgram, fragmentShader); // attach shader
-	glLinkProgram(shaderProgram); // link program
+	GLuint lightingShaderProgram; // create shader program id
+	lightingShaderProgram = glCreateProgram(); // create program
+	glAttachShader(lightingShaderProgram, lightingVertexShader); // attach shader
+	glAttachShader(lightingShaderProgram, lightingFragmentShader); // attach shader
+	glLinkProgram(lightingShaderProgram); // link program
 
 	// check for sp errors
 	int IsLinked;
 	int maxLength;
 	char* shaderProgramInfoLog;
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
+	glGetProgramiv(lightingShaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
 	if (IsLinked == FALSE)
 	{
 		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
-		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+		glGetProgramiv(lightingShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
 
 		/* The maxLength includes the NULL character */
 		shaderProgramInfoLog = (char*)malloc(maxLength);
 
 		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
-		glGetProgramInfoLog(shaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
+		glGetProgramInfoLog(lightingShaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
 
 		std::cerr << shaderProgramInfoLog; // display the error log
 		free(shaderProgramInfoLog);
 	}
 
-	//load default shader program
-	glUseProgram(shaderProgram); // Load the shader into the rendering pipeline 
+
 
 	// register debug callback
 #if _DEBUG
@@ -520,14 +513,105 @@ int main(int argc, char** argv)
 #endif
 
 	// get shader program uniform/attribute IDs
-	GLint View = glGetUniformLocation(shaderProgram, "view"); // get uniform ID for view matrix
-	GLint Proj = glGetUniformLocation(shaderProgram, "proj"); // get uniform ID for projection matrix 
-	GLint Model = glGetUniformLocation(shaderProgram, "model"); // get uniform ID for model matrix
-	GLint objectColor = glGetUniformLocation(shaderProgram, "objectColor"); // get uniform ID for out-color vector
-	GLint lightColor = glGetUniformLocation(shaderProgram, "lightColor"); // get uniform ID for out-color vector
+	GLint View = glGetUniformLocation(lightingShaderProgram, "view"); // get uniform ID for view matrix
+	GLint Proj = glGetUniformLocation(lightingShaderProgram, "proj"); // get uniform ID for projection matrix 
+	GLint Model = glGetUniformLocation(lightingShaderProgram, "model"); // get uniform ID for model matrix
+	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
+	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for out-color vector
 
-	GLint vertexPositions = glGetAttribLocation(shaderProgram, "position"); // get attribute ID for vertex position
+	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 
+	/////////////////////////////////////////BASIC SHADER////////////////////////////////////////////////////////////////////////////////
+
+		// Compile Vertex Shader 
+	vertexSource; // create character list
+	GLuint basicVertexShader; // create vertex shader id
+	std::ifstream b_is_vs("assets/BasicShader.vert"); // read shader file
+	const std::string b_f_vs((std::istreambuf_iterator<char>(b_is_vs)), std::istreambuf_iterator<char>()); // string buffer
+	vertexSource = b_f_vs.c_str(); // convert character list to string
+	basicVertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
+	glShaderSource(basicVertexShader, 1, &vertexSource, 0); // link source
+	glCompileShader(basicVertexShader); // Compile the vertex shader
+
+	// Check for vs errors
+	 succeded_vs;
+	glGetShaderiv(basicVertexShader, GL_COMPILE_STATUS, &succeded_vs);
+	if (succeded_vs == GL_FALSE) {
+		GLint logSize;
+		glGetShaderiv(basicVertexShader, GL_INFO_LOG_LENGTH, &logSize);
+		GLchar* message = new char[logSize];
+		glGetShaderInfoLog(basicVertexShader, logSize, NULL, message);
+		std::cerr << message;
+		delete[] message;
+	}
+
+	// Compile Fragment Shader 
+	fragmentSource; // create character list 
+	GLuint basicFragmentShader; // create frament shader id
+	std::ifstream b_is_fs("assets/BasicShader.frag");// read shader file
+	const std::string b_f_fs((std::istreambuf_iterator<char>(b_is_fs)), std::istreambuf_iterator<char>()); // string buffer
+	fragmentSource = b_f_fs.c_str(); // conver character list to string
+	basicFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
+	glShaderSource(basicFragmentShader, 1, &fragmentSource, 0); //link source
+	glCompileShader(basicFragmentShader); // Compile the fragment shader
+
+	// Check for fs errors
+	 succeded_fs;
+	glGetShaderiv(basicFragmentShader, GL_COMPILE_STATUS, &succeded_fs);
+	if (succeded_fs == GL_FALSE) {
+		GLint logSize;
+		glGetShaderiv(basicFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+		GLchar* message = new char[logSize];
+		glGetShaderInfoLog(basicFragmentShader, logSize, NULL, message);
+		std::cerr << message;
+		delete[] message;
+	}
+
+	// Compile Shader Program 
+	GLuint basicShaderProgram; // create shader program id
+	basicShaderProgram = glCreateProgram(); // create program
+	glAttachShader(basicShaderProgram, basicVertexShader); // attach shader
+	glAttachShader(basicShaderProgram, basicFragmentShader); // attach shader
+	glLinkProgram(basicShaderProgram); // link program
+
+	// check for sp errors
+	 IsLinked;
+	 maxLength;
+	shaderProgramInfoLog;
+	glGetProgramiv(basicShaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
+	if (IsLinked == FALSE)
+	{
+		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
+		glGetProgramiv(basicShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+
+		/* The maxLength includes the NULL character */
+		shaderProgramInfoLog = (char*)malloc(maxLength);
+
+		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
+		glGetProgramInfoLog(basicShaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
+
+		std::cerr << shaderProgramInfoLog; // display the error log
+		free(shaderProgramInfoLog);
+	}
+
+	// register debug callback
+#if _DEBUG
+	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
+#endif
+
+	// get shader program uniform/attribute IDs
+	GLint basicView = glGetUniformLocation(basicShaderProgram, "view"); // get uniform ID for view matrix
+	GLint basicProj = glGetUniformLocation(basicShaderProgram, "proj"); // get uniform ID for projection matrix 
+	GLint basicModel = glGetUniformLocation(basicShaderProgram, "model"); // get uniform ID for model matrix
+	GLint basicColor = glGetUniformLocation(basicShaderProgram, "color"); // get uniform ID for out-color vector
+
+	GLint basicVertexPositions = glGetAttribLocation(basicShaderProgram, "position"); // get attribute ID for vertex position
+
+	////////////////////////////////////////////////////////////////////////
+
+
+	// instantiate objects
 
 	// generate cuboid object
 	Cuboid cuboid(
@@ -535,9 +619,9 @@ int main(int argc, char** argv)
 		1.0f, // starting length
 		1.0f, // starting height
 		1.0f, // starting width
-		0.25f,
-		0.25f,
-		0.25f,
+		0.25f, // base color r
+		0.25f, // base color g
+		0.25f, // base color b
 		vertexPositions // attribute ID for vertex position
 	);
 
@@ -567,6 +651,14 @@ int main(int argc, char** argv)
 	); // create orbital camera
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
+
+	PointLightSource pointLightSource(
+		glm::mat4(1.0f), // transform
+		glm::vec3(1.0f, 1.0f, 0.0f), //color
+		glm::vec3(1.2f, 1.0f, 2.0f), // cardinal position
+		basicVertexPositions
+	);
+
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
 	// do pre-rendering object manipulation
@@ -576,13 +668,6 @@ int main(int argc, char** argv)
 
 	// cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
 
-
-	PointLightSource pointLightSource(
-		glm::mat4(1.0f), // transform
-		glm::vec3(1.0f, 1.0f, 0.0f), //color
-		glm::vec3(1.2f, 1.0f, 2.0f), // position
-		vertexPositions
-	);
 
 	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
 	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(0.25f, 0.25f, 0.25f));
@@ -676,15 +761,12 @@ int main(int argc, char** argv)
 
 			mainCamera.transformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
 
-			glm::mat4 view = Camera_LookAt(
+			glm::mat4 viewMatrix = Camera_LookAt(
 				mainCamera.transformCartesian, //eye 
 				mainCamera.targetTransformCartesian, // target
 				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
 
-			glUniformMatrix4fv(View, 1, GL_FALSE, glm::value_ptr(view)); // push view matrix to shader
-			glUniformMatrix4fv(Proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
@@ -705,10 +787,16 @@ int main(int argc, char** argv)
 			}
 			glPolygonMode(GL_FRONT_AND_BACK, mode);
 
-			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
+			glUseProgram(lightingShaderProgram); // Load the shader into the rendering pipeline 
+
+			glUniformMatrix4fv(View, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(Proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
+
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
+			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glUniform4f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b, 1.0); // push color to shader
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 			glBindVertexArray(0); // unbind VAO
@@ -721,12 +809,17 @@ int main(int argc, char** argv)
 			glBindVertexArray(0); // unbind VAO
 			*/
 
+			glUseProgram(basicShaderProgram); // Load the shader into the rendering pipeline 
+
+			glUniformMatrix4fv(basicView, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(basicProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(basicModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
 			glBindVertexArray(pointLightSource.Vao);
-			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
-			glUniform4f(objectColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
+			glUniformMatrix4fv(basicModel, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
+			glUniform4f(basicColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
-
 
 			glfwSwapBuffers(window); // swap buffer
 		}
@@ -735,11 +828,26 @@ int main(int argc, char** argv)
 	/* Free Resources */
 	glUseProgram(0);
 	glBindVertexArray(0);
-	glDetachShader(shaderProgram, vertexShader);
-	glDetachShader(shaderProgram, fragmentShader);
-	glDeleteProgram(shaderProgram);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	glDetachShader(lightingShaderProgram, lightingVertexShader);
+	glDetachShader(lightingShaderProgram, lightingFragmentShader);
+	glDeleteProgram(lightingShaderProgram);
+	glDeleteShader(lightingVertexShader);
+	glDeleteShader(lightingFragmentShader);
+
+	glDetachShader(basicShaderProgram, basicVertexShader);
+	glDetachShader(basicShaderProgram, basicFragmentShader);
+	glDeleteProgram(basicShaderProgram);
+	glDeleteShader(basicVertexShader);
+	glDeleteShader(basicFragmentShader);
+
+	glDeleteBuffers(1, &cuboid.Vbo);
+	glDeleteBuffers(1, &cuboid.Ebo);
+	glDeleteVertexArrays(1, &cuboid.Vao);
+
+	glDeleteBuffers(1, &pointLightSource.Vbo);
+	glDeleteVertexArrays(1, &pointLightSource.Vao);
+
+
 	destroyFramework(); // destroy framework
 	glfwDestroyWindow(window);
 	glfwTerminate();
