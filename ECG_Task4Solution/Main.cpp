@@ -107,18 +107,20 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	PointLightSource();
-	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint);
+	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint,float);
 	glm::vec3 color;
 	glm::vec3 position;
+	float ambientStrength;
 };
 
 PointLightSource::PointLightSource() {
 
 }
 
-PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions) {
+PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions,float _ambientStrength) {
 	color = _color;
 	position = _position;
+	ambientStrength = _ambientStrength;
 	mesh = PointLightSourceCubeMesh();
 	glGenVertexArrays(1, &Vao);
 	glBindVertexArray(Vao);
@@ -282,7 +284,7 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heÃ­ght,float r, float g, float b, GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght,float r, float g, float b, GLint); // constructor
 	Material material;
 };
 
@@ -517,7 +519,8 @@ int main(int argc, char** argv)
 	GLint Proj = glGetUniformLocation(lightingShaderProgram, "proj"); // get uniform ID for projection matrix 
 	GLint Model = glGetUniformLocation(lightingShaderProgram, "model"); // get uniform ID for model matrix
 	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
-	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for out-color vector
+	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for 
+	GLint ambientStrength = glGetUniformLocation(lightingShaderProgram, "ambientStrength"); // get uniform ID for 
 
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 
@@ -619,9 +622,9 @@ int main(int argc, char** argv)
 		1.0f, // starting length
 		1.0f, // starting height
 		1.0f, // starting width
-		0.25f, // base color r
-		0.25f, // base color g
-		0.25f, // base color b
+		1.0f, // base color r
+		0.1f, // base color g
+		0.1f, // base color b
 		vertexPositions // attribute ID for vertex position
 	);
 
@@ -654,9 +657,10 @@ int main(int argc, char** argv)
 
 	PointLightSource pointLightSource(
 		glm::mat4(1.0f), // transform
-		glm::vec3(1.0f, 1.0f, 0.0f), //color
+		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(1.2f, 1.0f, 2.0f), // cardinal position
-		basicVertexPositions
+		basicVertexPositions,
+		0.5f // ambient strength
 	);
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
@@ -798,6 +802,8 @@ int main(int argc, char** argv)
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
 			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glUniform4f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b, 1.0); // push color to shader
+			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
+
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
 			glBindVertexArray(0); // unbind VAO
 
