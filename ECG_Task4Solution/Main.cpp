@@ -235,8 +235,49 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments
 // ==CUBOID==
 class CuboidMesh {
 public:
-	float vertices[24]; // vertices array
-	unsigned int indices[36]; // indices array
+	float vertices[108] = {
+		 -0.5f,-0.5f,0.5f,// 0
+		 0.5f,-0.5f,0.5f,// 1
+		 0.5f,0.5f,0.5f,// 2
+		 0.5f,0.5f,0.5f,// 2
+		 -0.5f,0.5f,0.5f,// 3 
+		 -0.5f,-0.5f,0.5f,// 0
+
+		 0.5f,-0.5f,-0.5f,// 4
+		 -0.5f,-0.5f,-0.5f,// 5
+		 -0.5f,0.5f,-0.5f,// 6
+		 -0.5f,0.5f,-0.5f,// 6
+		 0.5f,0.5f,-0.5f,// 7
+		 0.5f,-0.5f,-0.5f,// 4
+
+		 0.5f,-0.5f,0.5f,// 1 
+		 0.5f,-0.5f,-0.5f,// 4
+		 0.5f,0.5f,-0.5f,// 7
+		 0.5f,0.5f,-0.5f,// 7
+		 0.5f,0.5f,0.5f, // 2
+		 0.5f,-0.5f,0.5f,// 1
+
+		 -0.5f,-0.5f,-0.5f,// 5
+		 -0.5f,-0.5f,0.5f, // 0
+		 -0.5f,0.5f,0.5f,// 3
+		 -0.5f,0.5f,0.5f,// 3
+		 -0.5f,0.5f,-0.5f,// 6
+		 -0.5f,-0.5f,-0.5f,// 5
+
+		 -0.5f,0.5f,-0.5f,// 6
+		 -0.5f,0.5f,0.5f,// 3
+		 0.5f,0.5f,0.5f,// 2
+		 0.5f,0.5f,0.5f,// 2
+		 0.5f,0.5f,-0.5f,// 7
+		 -0.5f,0.5f,-0.5f,// 6
+
+		 -0.5f,-0.5f,-0.5f,// 5
+		 0.5f,-0.5f,-0.5f,// 4
+		 0.5f,-0.5f,0.5f,// 1
+		 0.5f,-0.5f,0.5f,// 1
+		 -0.5f,-0.5f,0.5f,// 0
+		 -0.5f,-0.5f,-0.5f,// 5
+	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
 };
@@ -247,34 +288,7 @@ CuboidMesh::CuboidMesh() {
 
 CuboidMesh::CuboidMesh(float length, float width, float height) {
 
-	// generate unit cuboid vertices coordinates
-	vertices[0] = -width / 2.0f;  vertices[1] = -height / 2.0f;   vertices[2] = length / 2.0f; //v0
-	vertices[3] = width / 2.0f;   vertices[4] = -height / 2.0f;   vertices[5] = length / 2.0f; //v1
-	vertices[6] = width / 2.0f; vertices[7] = height / 2.0f; vertices[8] = length / 2.0f; // v2
-	vertices[9] = -width / 2.0f;  vertices[10] = height / 2.0f; vertices[11] = length / 2.0f; // v3
-	vertices[12] = width / 2.0f; vertices[13] = -height / 2.0f;  vertices[14] = -length / 2.0f; // v4
-	vertices[15] = -width / 2.0f;  vertices[16] = -height / 2.0f;  vertices[17] = -length / 2.0f; // v5
-	vertices[18] = -width / 2.0f; vertices[19] = height / 2.0f; vertices[20] = -length / 2.0f;  // v6
-	vertices[21] = width / 2.0f;  vertices[22] = height / 2.0f; vertices[23] = -length / 2.0f; // v7
 
-	// specify faces
-	indices[0] = 0;  indices[1] = 1; indices[2] = 2; // face 0
-	indices[3] = 2;  indices[4] = 3; indices[5] = 0;
-
-	indices[6] = 4;  indices[7] = 5; indices[8] = 6; // face 1
-	indices[9] = 6;  indices[10] = 7; indices[11] = 4;
-
-	indices[12] = 1; indices[13] = 4; indices[14] = 7; // face 2 
-	indices[15] = 7; indices[16] = 2; indices[17] = 1;
-
-	indices[18] = 5; indices[19] = 0; indices[20] = 3; // face 3 
-	indices[21] = 3; indices[22] = 6; indices[23] = 5;
-
-	indices[24] = 6; indices[25] = 3; indices[26] = 2; // face 4
-	indices[27] = 2; indices[28] = 7; indices[29] = 6;
-
-	indices[30] = 5; indices[31] = 4; indices[32] = 1; // face 5
-	indices[33] = 1; indices[34] = 0; indices[35] = 5;
 }
 
 class Cuboid {
@@ -284,7 +298,7 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght,float r, float g, float b, GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heÃ­ght,float r, float g, float b, GLint); // constructor
 	Material material;
 };
 
@@ -297,9 +311,6 @@ Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height,flo
 	glGenBuffers(1, &Vbo); // generate the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
 	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
-	glGenBuffers(1, &Ebo); // generate the EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo); // bind the EBO
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh.indices), mesh.indices, GL_STATIC_DRAW);// buffer the index data
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // set vertex layout 2/2
@@ -804,7 +815,7 @@ int main(int argc, char** argv)
 			glUniform4f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b, 1.0); // push color to shader
 			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
 
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // draw cuboid
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
 
 			/*
