@@ -288,7 +288,24 @@ CuboidMesh::CuboidMesh() {
 
 CuboidMesh::CuboidMesh(float length, float width, float height) {
 
-
+	int counter = 0;
+	for (int i = 0; i < 108; i++) {
+		switch (counter)
+		{
+		case 0:
+			vertices[i] *= height;
+			counter++;
+			break;
+		case 1:
+			vertices[i] *= length;
+			counter++;
+			break;
+		case 2:
+			vertices[i] *= width;
+			counter = 0;
+			break;
+		}
+	}
 }
 
 class Cuboid {
@@ -632,7 +649,7 @@ int main(int argc, char** argv)
 		glm::mat4(1.0f), // starting transform
 		1.0f, // starting length
 		1.0f, // starting height
-		1.0f, // starting width
+		2.0f, // starting width
 		1.0f, // base color r
 		0.1f, // base color g
 		0.1f, // base color b
