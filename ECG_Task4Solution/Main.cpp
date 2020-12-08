@@ -28,6 +28,7 @@ glm::mat4 Camera_LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 void window_onMouseDown(GLFWwindow* window);
 void Window_onMouseRelease();
 double DegreesToRadians(double degrees);
+glm::vec3 CalculateSurfaceNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
 
 #define M_PI std::acos(-1.0)
 
@@ -236,47 +237,56 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments
 class CuboidMesh {
 public:
 	float vertices[216] = {
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3 
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
+		// v = [float,float,float (position)][float,float,float (normal)]
+		// f = [v,v,v,v,v,v] (CLOCKWISE ORDERING)
 
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
+		 ///f0///
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v0
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v1
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v2
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v3 
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v0
 
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1 
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
+		 ///f1///
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v4
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v5
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v6
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v7
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v4
 
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
+		 ///f2///
+		 0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v1 
+		 0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v4
+		 0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v7
+		 0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v7
+		 0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v2
+		 0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v1
 
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
+		 ///f3///
+		 -0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v5
+		 -0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v0
+		 -0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v3
+		 -0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v3
+		 -0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v6
+		 -0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v5
 
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
+		 ///f4///
+		 -0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v6
+		 -0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v3
+		 0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v2
+		 0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v7
+		 -0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v6
+
+		 ///f5///
+		 -0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v5
+		 0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v4
+		 0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v1
+		 0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v1
+		 -0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v0
+		 -0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v5
 	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
@@ -315,6 +325,9 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 			break;
 		}
 	}
+
+	glm::vec3 normalTest = CalculateSurfaceNormal(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f));
+	std::cout << normalTest.x << ", " << normalTest.y << ", " << normalTest.z;
 }
 
 class Cuboid {
@@ -561,6 +574,8 @@ int main(int argc, char** argv)
 	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
 	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for 
 	GLint ambientStrength = glGetUniformLocation(lightingShaderProgram, "ambientStrength"); // get uniform ID for 
+	GLint lightPosition = glGetUniformLocation(lightingShaderProgram, "lightPos"); // get uniform ID for 
+
 
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexNormals = glGetAttribLocation(lightingShaderProgram, "normal"); // get attribute ID for vertex position
@@ -846,6 +861,8 @@ int main(int argc, char** argv)
 			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glUniform4f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b, 1.0); // push color to shader
 			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
+			glUniform3f(lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
+
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
@@ -1127,4 +1144,16 @@ float Clamp(float value, float min, float max) {
 // the parameter "degrees" specifies the degrees to be converted from degrees to radians
 double DegreesToRadians(double degrees) {
 	return (degrees * PI) / 180;
+}
+
+glm::vec3 CalculateSurfaceNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
+
+	glm::vec3 normal;
+
+	glm::vec3 U = v2 - v1;
+	glm::vec3 V = v3 - v1;
+
+	normal = glm::cross(V, U);
+
+	return glm::normalize(normal);
 }
