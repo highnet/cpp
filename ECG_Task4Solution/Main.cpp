@@ -235,48 +235,48 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments
 // ==CUBOID==
 class CuboidMesh {
 public:
-	float vertices[108] = {
-		 -0.5f,-0.5f,0.5f,// 0
-		 0.5f,-0.5f,0.5f,// 1
-		 0.5f,0.5f,0.5f,// 2
-		 0.5f,0.5f,0.5f,// 2
-		 -0.5f,0.5f,0.5f,// 3 
-		 -0.5f,-0.5f,0.5f,// 0
+	float vertices[216] = {
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3 
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
 
-		 0.5f,-0.5f,-0.5f,// 4
-		 -0.5f,-0.5f,-0.5f,// 5
-		 -0.5f,0.5f,-0.5f,// 6
-		 -0.5f,0.5f,-0.5f,// 6
-		 0.5f,0.5f,-0.5f,// 7
-		 0.5f,-0.5f,-0.5f,// 4
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
 
-		 0.5f,-0.5f,0.5f,// 1 
-		 0.5f,-0.5f,-0.5f,// 4
-		 0.5f,0.5f,-0.5f,// 7
-		 0.5f,0.5f,-0.5f,// 7
-		 0.5f,0.5f,0.5f, // 2
-		 0.5f,-0.5f,0.5f,// 1
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1 
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
 
-		 -0.5f,-0.5f,-0.5f,// 5
-		 -0.5f,-0.5f,0.5f, // 0
-		 -0.5f,0.5f,0.5f,// 3
-		 -0.5f,0.5f,0.5f,// 3
-		 -0.5f,0.5f,-0.5f,// 6
-		 -0.5f,-0.5f,-0.5f,// 5
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
 
-		 -0.5f,0.5f,-0.5f,// 6
-		 -0.5f,0.5f,0.5f,// 3
-		 0.5f,0.5f,0.5f,// 2
-		 0.5f,0.5f,0.5f,// 2
-		 0.5f,0.5f,-0.5f,// 7
-		 -0.5f,0.5f,-0.5f,// 6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 3
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,0.0f,// 2
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 7
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,0.0f,// 6
 
-		 -0.5f,-0.5f,-0.5f,// 5
-		 0.5f,-0.5f,-0.5f,// 4
-		 0.5f,-0.5f,0.5f,// 1
-		 0.5f,-0.5f,0.5f,// 1
-		 -0.5f,-0.5f,0.5f,// 0
-		 -0.5f,-0.5f,-0.5f,// 5
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 4
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 1
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,0.0f,// 0
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,0.0f,// 5
 	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
@@ -289,7 +289,7 @@ CuboidMesh::CuboidMesh() {
 CuboidMesh::CuboidMesh(float length, float width, float height) {
 
 	int counter = 0;
-	for (int i = 0; i < 108; i++) {
+	for (int i = 0; i < 216; i++) {
 		switch (counter)
 		{
 		case 0:
@@ -302,6 +302,15 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 			break;
 		case 2:
 			vertices[i] *= width;
+			counter++;
+			break;
+		case 3:
+			counter++;
+			break;
+		case 4:
+			counter++;
+			break;
+		case 5:
 			counter = 0;
 			break;
 		}
@@ -315,11 +324,11 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heÃ­ght,float r, float g, float b, GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght,float r, float g, float b, GLint,GLint); // constructor
 	Material material;
 };
 
-Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height,float r, float g, float b, GLint vertexPositions) {
+Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals) {
 	transform = _transform;
 	mesh = CuboidMesh(length, height, width);
 	material = Material(r, g, b);
@@ -330,7 +339,10 @@ Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height,flo
 	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.vertices), mesh.vertices, GL_STATIC_DRAW); // buffer the vertex data
 
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // set vertex layout 2/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexNormals); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexNormals, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 
 	glEnableVertexAttribArray(0); // disable the VAO
 
@@ -551,6 +563,8 @@ int main(int argc, char** argv)
 	GLint ambientStrength = glGetUniformLocation(lightingShaderProgram, "ambientStrength"); // get uniform ID for 
 
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
+	GLint vertexNormals = glGetAttribLocation(lightingShaderProgram, "normal"); // get attribute ID for vertex position
+
 
 	/////////////////////////////////////////BASIC SHADER////////////////////////////////////////////////////////////////////////////////
 
@@ -653,7 +667,8 @@ int main(int argc, char** argv)
 		1.0f, // base color r
 		0.1f, // base color g
 		0.1f, // base color b
-		vertexPositions // attribute ID for vertex position
+		vertexPositions, // attribute ID for vertex position
+		vertexNormals
 	);
 
 
