@@ -1,8 +1,6 @@
 //fragment shader
 #version 430
 
-
-
 out vec4 FragColor;
 
 in vec3 Normal;
@@ -13,7 +11,6 @@ uniform vec3 lightColor;
 
 uniform float ambientStrength;
 uniform vec3 lightPos;
-
 
 void main()
 {

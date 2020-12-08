@@ -391,9 +391,9 @@ struct Vectors { // Shorthand representation of 3D vectors in this engine
 	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
 	glm::vec3 BACK = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 FORWARD = glm::vec3(0.0f, 1.0f, 1.0f);
+	glm::vec3 FORWARD = glm::vec3(0.0f, 0.0f, 1.0f);
 	glm::vec3 LEFT = glm::vec3(-1.0f, 0.0f, 0.0f);
-	glm::vec3 RIGHT = glm::vec3(1.0f, 1.0f, 0.0f);
+	glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 	glm::vec3 ONE = glm::vec3(1.0f, 1.0f, 1.0f);
 	glm::vec3 ZERO = glm::vec3(0.0f, 0.0f, 0.0f);
 };
@@ -676,9 +676,9 @@ int main(int argc, char** argv)
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		1.0f, // starting length
-		1.0f, // starting height
-		2.0f, // starting width
+		3.0f, // starting length
+		2.0f, // starting height
+		2.5f, // starting width
 		1.0f, // base color r
 		0.1f, // base color g
 		0.1f, // base color b
@@ -716,7 +716,7 @@ int main(int argc, char** argv)
 	PointLightSource pointLightSource(
 		glm::mat4(1.0f), // transform
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
-		glm::vec3(1.2f, 1.0f, 2.0f), // cardinal position
+		glm::vec3(3.2f, 3.0f, 4.0f), // cardinal position
 		basicVertexPositions,
 		0.25f // ambient strength
 	);
@@ -732,7 +732,7 @@ int main(int argc, char** argv)
 
 
 	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
-	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(0.25f, 0.25f, 0.25f));
+	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -861,6 +861,34 @@ int main(int argc, char** argv)
 			glUniform3f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z); // push color to shader
 			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
 			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
+
+
+			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * 0.001f);
+				pointLightSource.position += Vector3.UP * 0.001f;
+			} 
+			else if (Input.DOWN_KEY_PRESSED && Input.RIGHT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.DOWN * 0.001f);
+				pointLightSource.position += Vector3.DOWN * 0.001f;
+			}
+			else if (Input.RIGHT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.RIGHT * 0.001f);
+				pointLightSource.position += Vector3.RIGHT * 0.001f;
+			}
+			else if (Input.LEFT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.LEFT * 0.001f);
+				pointLightSource.position += Vector3.LEFT * 0.001f;
+			}
+
+			else if (Input.UP_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.FORWARD * 0.001f);
+				pointLightSource.position += Vector3.FORWARD * 0.001f;
+			}
+			else if (Input.DOWN_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.BACK * 0.001f);
+				pointLightSource.position += Vector3.BACK * 0.001f;
+			}
+
 			glUniform3f(lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
 
 
