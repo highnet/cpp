@@ -241,52 +241,52 @@ public:
 		// f = [v,v,v,v,v,v] (CLOCKWISE ORDERING)
 
 		 ///f0///
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v0
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v1
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v2
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,-1.0f,// v3 
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,-1.0f,// v0
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v0
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v1
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v2
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v3 
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v0
 
 		 ///f1///
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v4
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v5
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v6
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v6
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,1.0f,// v7
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,1.0f,// v4
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v4
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v5
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v6
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v7
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v4
 
 		 ///f2///
-		 0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v1 
-		 0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v4
-		 0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v7
-		 0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v7
-		 0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v2
-		 0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v1
+		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v1 
+		 0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v4
+		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v7
+		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v7
+		 0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v2
+		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v1
 
 		 ///f3///
-		 -0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v5
-		 -0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v0
-		 -0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v3
-		 -0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v3
-		 -0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v6
-		 -0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v5
+		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v5
+		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v0
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v3
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v3
+		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v6
+		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v5
 
 		 ///f4///
-		 -0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v6
-		 -0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v3
-		 0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,-1.0f,0.0f,// v2
-		 0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v7
-		 -0.5f,0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v6
+		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v3
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v2
+		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v7
+		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v6
 
 		 ///f5///
-		 -0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v5
-		 0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v4
-		 0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v1
-		 0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v1
-		 -0.5f,-0.5f,0.5f, 0.0f,1.0f,0.0f,// v0
-		 -0.5f,-0.5f,-0.5f, 0.0f,1.0f,0.0f,// v5
+		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v5
+		 0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v4
+		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v1
+		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v1
+		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v0
+		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v5
 	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
@@ -326,8 +326,8 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 		}
 	}
 
-	glm::vec3 normalTest = CalculateSurfaceNormal(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f));
-	std::cout << normalTest.x << ", " << normalTest.y << ", " << normalTest.z;
+	//	glm::vec3 normalTest = CalculateSurfaceNormal(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f));
+	//	std::cout << normalTest.x << ", " << normalTest.y << ", " << normalTest.z;
 }
 
 class Cuboid {
@@ -718,15 +718,15 @@ int main(int argc, char** argv)
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(1.2f, 1.0f, 2.0f), // cardinal position
 		basicVertexPositions,
-		0.5f // ambient strength
+		0.25f // ambient strength
 	);
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
 	// do pre-rendering object manipulation
 
-	cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 1.0f, 0.0f));
-	cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
+	// cuboid.transform = glm::rotate(cuboid.transform, (float)DegreesToRadians(45.0), glm::vec3(0.0f, 1.0f, 0.0f));
+    // cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
 
 	// cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
 
@@ -858,8 +858,8 @@ int main(int argc, char** argv)
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
-			glUniform4f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
-			glUniform4f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b, 1.0); // push color to shader
+			glUniform3f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z); // push color to shader
+			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
 			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
 			glUniform3f(lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
 
@@ -1153,7 +1153,7 @@ glm::vec3 CalculateSurfaceNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 	glm::vec3 U = v2 - v1;
 	glm::vec3 V = v3 - v1;
 
-	normal = glm::cross(V, U);
+	normal = glm::cross(U, V);
 
 	return glm::normalize(normal);
 }
