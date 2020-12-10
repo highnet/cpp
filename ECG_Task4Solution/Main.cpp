@@ -376,11 +376,10 @@ public:
 	glm::vec3 targetTransformCartesian; // cartesian position of the camera's target
 	glm::mat4 projectionMatrix; // projection matrix used by the camera
 	float orbitalSpeedZoom;
-	float strafeSpeed;
-	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float, float); // constructor definition
+	OrbitalCamera(glm::vec3, float, float, float, float, glm::vec3, float); // constructor definition
 };
 
-OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom, float _strafeSpeed) // constructor
+OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom) // constructor
 {
 	cameraPosition = _transformCartesian; //glm::vec3
 	orbitalRadius = _orbitalRadius; // float
@@ -389,7 +388,6 @@ OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius
 	orbitalSpeed = _orbitalSpeed; // float 
 	targetTransformCartesian = _targetTransformCartesian; //glm::vec3
 	orbitalSpeedZoom = _orbitalSpeedZoom; // float 
-	strafeSpeed = _strafeSpeed; // float
 }
 
 struct Vectors { // Shorthand representation of 3D vectors in this engine
@@ -713,8 +711,7 @@ int main(int argc, char** argv)
 		0.0f, // orbital azimuth angle
 		0.05f, // orbital speed for azimuth and inclination angles
 		glm::vec3(0.0f, 0.0f, 0.0f), // target's positon transform in cartesian coordinates x,y,z
-		0.25f, // orbital zoom speed
-		0.05f // strafe speed
+		0.25f // orbital zoom speed
 	); // create orbital camera
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
@@ -771,38 +768,6 @@ int main(int argc, char** argv)
 			Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
 			Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
 
-
-			if (Input.RIGHT_MOUSEBUTTON_PRESSED && !Input.LEFT_MOUSEBUTTON_PRESSED) { // while RMB is held and LMB is not held
-
-				/*Calculate the look, right and up vectors relating to the camera transform and the target transform*/
-				glm::vec3 camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.cameraPosition);// Normalize the look vector.
-				glm::vec3 camera_right_vector = glm::cross(camera_look_vector, Vector3.UP); // Take the cross product of the vector and the up vector. This gives us the camera relative right vector.
-				glm::vec3 camera_up_vector = glm::cross(camera_right_vector, camera_look_vector); // Take the cross product of the right vector and the look vector. This is the camera relative up vector*/
-
-
-				if (mouseDX < 0) {
-					mainCamera.cameraPosition += mainCamera.strafeSpeed * camera_right_vector; // move camera relative right
-					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_right_vector; // target must be moved equally
-				}
-				else if (mouseDX > 0) {
-					mainCamera.cameraPosition -= mainCamera.strafeSpeed * camera_right_vector; // move camera relative left
-					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // target must me moved equally
-				}
-
-				/* Recalculate look,right and up vectors in case they were changed since last calculated */
-				camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.cameraPosition);
-				camera_right_vector = glm::cross(camera_look_vector, Vector3.UP);
-				camera_up_vector = glm::cross(camera_right_vector, camera_look_vector);
-
-				if (mouseDY < 0) {
-					mainCamera.cameraPosition -= mainCamera.strafeSpeed * camera_up_vector; // move camera relative down
-					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // target must be moved equally
-				}
-				else if (mouseDY > 0) {
-					mainCamera.cameraPosition += mainCamera.strafeSpeed * camera_up_vector; // move camera relative up
-					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_up_vector; // target must be moved equaly
-				}
-			}
 
 			if (Input.LEFT_MOUSEBUTTON_PRESSED && !Input.RIGHT_MOUSEBUTTON_PRESSED) { // while LMB mouse is held and RMB is not held
 
