@@ -580,7 +580,7 @@ int main(int argc, char** argv)
 	GLint View = glGetUniformLocation(lightingShaderProgram, "view"); // get uniform ID for view matrix
 	GLint Proj = glGetUniformLocation(lightingShaderProgram, "proj"); // get uniform ID for projection matrix 
 	GLint Model = glGetUniformLocation(lightingShaderProgram, "model"); // get uniform ID for model matrix
-	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
+	GLint materialColor = glGetUniformLocation(lightingShaderProgram, "materialColor"); // get uniform ID for out-color vector
 	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for 
 	GLint lightPosition = glGetUniformLocation(lightingShaderProgram, "lightPos"); // get uniform ID for 
 	GLint viewPosition = glGetUniformLocation(lightingShaderProgram, "viewPos"); // get uniform ID for 
@@ -595,7 +595,7 @@ int main(int argc, char** argv)
 
 	/////////////////////////////////////////BASIC SHADER////////////////////////////////////////////////////////////////////////////////
 
-		// Compile Vertex Shader 
+	// Compile Vertex Shader 
 	vertexSource; // create character list
 	GLuint basicVertexShader; // create vertex shader id
 	std::ifstream b_is_vs("assets/BasicShader.vert"); // read shader file
@@ -762,6 +762,32 @@ int main(int argc, char** argv)
 		// handle inputs
 			glfwPollEvents(); // handle OS events
 
+			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * 0.001f);
+				pointLightSource.position += Vector3.UP * 0.001f;
+			}
+			else if (Input.DOWN_KEY_PRESSED && Input.RIGHT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.DOWN * 0.001f);
+				pointLightSource.position += Vector3.DOWN * 0.001f;
+			}
+			else if (Input.RIGHT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.RIGHT * 0.001f);
+				pointLightSource.position += Vector3.RIGHT * 0.001f;
+			}
+			else if (Input.LEFT_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.LEFT * 0.001f);
+				pointLightSource.position += Vector3.LEFT * 0.001f;
+			}
+
+			else if (Input.UP_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.FORWARD * 0.001f);
+				pointLightSource.position += Vector3.FORWARD * 0.001f;
+			}
+			else if (Input.DOWN_KEY_PRESSED) {
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.BACK * 0.001f);
+				pointLightSource.position += Vector3.BACK * 0.001f;
+			}
+
 			if (Input.SCROLL_UP) {
 				mainCamera.orbitalRadius += mainCamera.orbitalSpeedZoom; // move the camera away from target
 			}
@@ -813,7 +839,6 @@ int main(int argc, char** argv)
 				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
 
-
 		// handle pixel drawing
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear screen with default color
 
@@ -839,17 +864,12 @@ int main(int argc, char** argv)
 			glUniformMatrix4fv(Proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
-
 			glUniform3f(viewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
-			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
-
-			glUniform1f(k_ambient, cuboid.material.k_ambient);
-			glUniform1f(k_diffuse, cuboid.material.k_diffuse);
-			glUniform1f(k_specular, cuboid.material.k_specular);
+			glUniform3f(materialColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
 
 			glm::vec3 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
@@ -857,37 +877,11 @@ int main(int argc, char** argv)
 			float linear = pointLightSource.attenuation_Linear;
 			float quadratic = pointLightSource.attenuation_Quadratic;
 			glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-
 			glUniform3f(lightColor, intensity.x,intensity.y,intensity.z); // push color to shader
-
-			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * 0.001f);
-				pointLightSource.position += Vector3.UP * 0.001f;
-			} 
-			else if (Input.DOWN_KEY_PRESSED && Input.RIGHT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.DOWN * 0.001f);
-				pointLightSource.position += Vector3.DOWN * 0.001f;
-			}
-			else if (Input.RIGHT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.RIGHT * 0.001f);
-				pointLightSource.position += Vector3.RIGHT * 0.001f;
-			}
-			else if (Input.LEFT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.LEFT * 0.001f);
-				pointLightSource.position += Vector3.LEFT * 0.001f;
-			}
-
-			else if (Input.UP_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.FORWARD * 0.001f);
-				pointLightSource.position += Vector3.FORWARD * 0.001f;
-			}
-			else if (Input.DOWN_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.BACK * 0.001f);
-				pointLightSource.position += Vector3.BACK * 0.001f;
-			}
-
 			glUniform3f(lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
-
+			glUniform1f(k_ambient, cuboid.material.k_ambient);
+			glUniform1f(k_diffuse, cuboid.material.k_diffuse);
+			glUniform1f(k_specular, cuboid.material.k_specular);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO

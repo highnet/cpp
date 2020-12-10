@@ -6,7 +6,7 @@ out vec4 FragColor;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform vec3 objectColor;
+uniform vec3 materialColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -35,6 +35,6 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256); // last value is the material shinyness
     vec3 specular = specularStrength * spec * lightColor; 
     
-    vec3 result = k_specular * (ambient + diffuse + specular) * objectColor;
+    vec3 result = k_specular * (ambient + diffuse + specular) * materialColor;
     FragColor = vec4(result, 1.0);
 }
