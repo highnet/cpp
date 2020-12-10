@@ -865,10 +865,15 @@ int main(int argc, char** argv)
 
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
 			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
-			glm::vec3 intensity = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
+			
+			glm::vec3 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
+			float constant = pointLightSource.attenuation_Constant;
+			float linear = pointLightSource.attenuation_Linear;
+			float quadratic = pointLightSource.attenuation_Quadratic;
+			glm::vec3 intensity = energy * (1.0f / (quadratic * pow(distance, 2) + linear * distance + constant));
 
-			glUniform3f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z); // push color to shader
+			glUniform3f(lightColor, intensity.x,intensity.y,intensity.z); // push color to shader
 
 
 			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
