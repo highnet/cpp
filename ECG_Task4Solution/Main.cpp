@@ -108,20 +108,24 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	PointLightSource();
-	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint,float);
+	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint,float,float,float);
 	glm::vec3 color;
 	glm::vec3 position;
-	float ambientStrength;
+	float attenuation_Constant;
+	float attenuation_Linear;
+	float attenuation_Quadratic;
 };
 
 PointLightSource::PointLightSource() {
 
 }
 
-PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions,float _ambientStrength) {
+PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions,float _attenuation_Constant, float _attenuation_Linear, float _attenuation_Quadratic ) {
 	color = _color;
 	position = _position;
-	ambientStrength = _ambientStrength;
+	attenuation_Constant = _attenuation_Constant;
+	attenuation_Linear = _attenuation_Linear;
+	attenuation_Quadratic = _attenuation_Quadratic;
 	mesh = PointLightSourceCubeMesh();
 	glGenVertexArrays(1, &Vao);
 	glBindVertexArray(Vao);
@@ -333,15 +337,16 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 class Cuboid {
 public:
 	glm::mat4 transform; // model matrix of the cuboid object
+	glm::vec3 position;
 	CuboidMesh mesh; // mesh object
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, float length, float width, float heíght,float r, float g, float b, GLint,GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform,glm::vec3 position, float length, float width, float heíght,float r, float g, float b, GLint,GLint); // constructor
 	Material material;
 };
 
-Cuboid::Cuboid(glm::mat4 _transform, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals) {
+Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 position, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals) {
 	transform = _transform;
 	mesh = CuboidMesh(length, height, width);
 	material = Material(r, g, b);
@@ -573,9 +578,7 @@ int main(int argc, char** argv)
 	GLint Model = glGetUniformLocation(lightingShaderProgram, "model"); // get uniform ID for model matrix
 	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
 	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for 
-	GLint ambientStrength = glGetUniformLocation(lightingShaderProgram, "ambientStrength"); // get uniform ID for 
 	GLint lightPosition = glGetUniformLocation(lightingShaderProgram, "lightPos"); // get uniform ID for 
-
 
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexNormals = glGetAttribLocation(lightingShaderProgram, "normal"); // get attribute ID for vertex position
@@ -676,6 +679,7 @@ int main(int argc, char** argv)
 	// generate cuboid object
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
+		glm::vec3(0.0f, 0.0f, 0.0f),
 		3.0f, // starting length
 		2.0f, // starting height
 		2.5f, // starting width
@@ -685,6 +689,7 @@ int main(int argc, char** argv)
 		vertexPositions, // attribute ID for vertex position
 		vertexNormals
 	);
+	cuboid.transform = glm::translate(cuboid.transform, cuboid.position);
 
 
 	/*
@@ -718,8 +723,13 @@ int main(int argc, char** argv)
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(3.2f, 3.0f, 4.0f), // cardinal position
 		basicVertexPositions,
-		0.25f // ambient strength
+		0.25f, // constant attenuation
+		0.4f, // linear attenuation
+		0.1f // quadratic attenuation
 	);
+
+	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
+	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
@@ -729,10 +739,6 @@ int main(int argc, char** argv)
     // cuboid.transform = glm::translate(cuboid.transform, glm::vec3(2.0f, 0.0f, 0.0f));
 
 	// cylinder.transform = glm::translate(cylinder.transform, glm::vec3(-2.0f, 0.0f, 0.0f));
-
-
-	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
-	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) // render loop
@@ -858,9 +864,11 @@ int main(int argc, char** argv)
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
-			glUniform3f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z); // push color to shader
 			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
-			glUniform1f(ambientStrength, pointLightSource.ambientStrength); // push color to shader
+			glm::vec3 intensity = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
+			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
+
+			glUniform3f(lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z); // push color to shader
 
 
 			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
