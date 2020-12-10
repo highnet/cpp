@@ -35,18 +35,24 @@ glm::vec3 CalculateSurfaceNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
 class Material {
 public:
 	glm::vec4 baseColor;
+	float k_ambient;
+	float k_diffuse;
+	float k_specular;
 	Material();
-	Material(float, float, float);
+	Material(float, float, float,float,float,float);
 };
 
 Material::Material() {
 
 }
 
-Material::Material(float r, float g, float b) {
+Material::Material(float r, float g, float b,float ka, float kd, float ks) {
 	baseColor.x = r;
 	baseColor.y = g;
 	baseColor.z = b;
+	k_ambient = ka;
+	k_diffuse = kd;
+	k_specular = ks;
 }
 
 class PointLightSourceCubeMesh {
@@ -342,14 +348,14 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform,glm::vec3 position, float length, float width, float heíght,float r, float g, float b, GLint,GLint); // constructor
+	Cuboid::Cuboid(glm::mat4 transform,glm::vec3 position, float length, float width, float heíght,float r, float g, float b, GLint,GLint,float, float, float); // constructor
 	Material material;
 };
 
-Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 position, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals) {
+Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 position, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals, float ka, float kd, float ks) {
 	transform = _transform;
 	mesh = CuboidMesh(length, height, width);
-	material = Material(r, g, b);
+	material = Material(r, g, b,ka,kd,ks);
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 	glGenBuffers(1, &Vbo); // generate the VBO
@@ -579,6 +585,10 @@ int main(int argc, char** argv)
 	GLint lightPosition = glGetUniformLocation(lightingShaderProgram, "lightPos"); // get uniform ID for 
 	GLint viewPosition = glGetUniformLocation(lightingShaderProgram, "viewPos"); // get uniform ID for 
 
+	GLint k_ambient = glGetUniformLocation(lightingShaderProgram, "k_ambient"); // get uniform ID for 
+	GLint k_diffuse = glGetUniformLocation(lightingShaderProgram, "k_diffuse"); // get uniform ID for 
+	GLint k_specular = glGetUniformLocation(lightingShaderProgram, "k_specular"); // get uniform ID for 
+
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexNormals = glGetAttribLocation(lightingShaderProgram, "normal"); // get attribute ID for vertex position
 
@@ -675,18 +685,21 @@ int main(int argc, char** argv)
 
 	// instantiate objects
 
-	// generate cuboid object
+	// cuboid definition generation
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
 		glm::vec3(0.0f, 0.0f, 0.0f),
-		3.0f, // starting length
-		2.0f, // starting height
-		2.5f, // starting width
+		6.0f, // starting length
+		4.0, // starting height
+		5.0f, // starting width
 		1.0f, // base color r
 		0.1f, // base color g
 		0.1f, // base color b
 		vertexPositions, // attribute ID for vertex position
-		vertexNormals
+		vertexNormals,
+		0.05f, // ka 
+		0.8f, // kd
+		0.5f // ks
 	);
 	cuboid.transform = glm::translate(cuboid.transform, cuboid.position);
 
@@ -715,15 +728,14 @@ int main(int argc, char** argv)
 	); // create orbital camera
 	mainCamera.projectionMatrix = glm::perspective(DegreesToRadians(fovy), aspect_ratio, zNear, zFar); // create perspective matrix
 
-
 	PointLightSource pointLightSource(
 		glm::mat4(1.0f), // transform
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(3.2f, 3.0f, 4.0f), // cardinal position
 		basicVertexPositions,
-		0.25f, // constant attenuation
-		0.4f, // linear attenuation
-		0.1f // quadratic attenuation
+		0.5f, // constant attenuation
+		0.01f, // linear attenuation
+		0.001f // quadratic attenuation
 	);
 
 	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
@@ -829,22 +841,24 @@ int main(int argc, char** argv)
 
 
 			glUniform3f(viewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
-			std::cout << mainCamera.cameraPosition.x << " " << mainCamera.cameraPosition.y << " " << mainCamera.cameraPosition.z << std::endl;
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
 			glUniform3f(objectColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
-			
+
+			glUniform1f(k_ambient, cuboid.material.k_ambient);
+			glUniform1f(k_diffuse, cuboid.material.k_diffuse);
+			glUniform1f(k_specular, cuboid.material.k_specular);
+
 			glm::vec3 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
 			float constant = pointLightSource.attenuation_Constant;
 			float linear = pointLightSource.attenuation_Linear;
 			float quadratic = pointLightSource.attenuation_Quadratic;
-			glm::vec3 intensity = energy * (1.0f / (quadratic * pow(distance, 2) + linear * distance + constant));
+			glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
 
 			glUniform3f(lightColor, intensity.x,intensity.y,intensity.z); // push color to shader
-
 
 			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
 				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * 0.001f);
