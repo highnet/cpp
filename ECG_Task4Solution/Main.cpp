@@ -368,7 +368,7 @@ Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 position, float length, float widt
 
 class OrbitalCamera {
 public:
-	glm::vec3 transformCartesian; // cartesian position of the camera
+	glm::vec3 cameraPosition; // cartesian position of the camera
 	float orbitalRadius; // orbital radius distance 
 	float orbitalInclination; // orbital inclination angle
 	float orbitalAzimuth; // orbital azimuth angle
@@ -382,7 +382,7 @@ public:
 
 OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius, float _orbitalInclination, float _orbitalAzimuth, float _orbitalSpeed, glm::vec3 _targetTransformCartesian, float _orbitalSpeedZoom, float _strafeSpeed) // constructor
 {
-	transformCartesian = _transformCartesian; //glm::vec3
+	cameraPosition = _transformCartesian; //glm::vec3
 	orbitalRadius = _orbitalRadius; // float
 	orbitalInclination = _orbitalInclination; // float
 	orbitalAzimuth = _orbitalAzimuth; //float 
@@ -579,6 +579,7 @@ int main(int argc, char** argv)
 	GLint objectColor = glGetUniformLocation(lightingShaderProgram, "objectColor"); // get uniform ID for out-color vector
 	GLint lightColor = glGetUniformLocation(lightingShaderProgram, "lightColor"); // get uniform ID for 
 	GLint lightPosition = glGetUniformLocation(lightingShaderProgram, "lightPos"); // get uniform ID for 
+	GLint viewPosition = glGetUniformLocation(lightingShaderProgram, "viewPos"); // get uniform ID for 
 
 	GLint vertexPositions = glGetAttribLocation(lightingShaderProgram, "position"); // get attribute ID for vertex position
 	GLint vertexNormals = glGetAttribLocation(lightingShaderProgram, "normal"); // get attribute ID for vertex position
@@ -774,31 +775,31 @@ int main(int argc, char** argv)
 			if (Input.RIGHT_MOUSEBUTTON_PRESSED && !Input.LEFT_MOUSEBUTTON_PRESSED) { // while RMB is held and LMB is not held
 
 				/*Calculate the look, right and up vectors relating to the camera transform and the target transform*/
-				glm::vec3 camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);// Normalize the look vector.
+				glm::vec3 camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.cameraPosition);// Normalize the look vector.
 				glm::vec3 camera_right_vector = glm::cross(camera_look_vector, Vector3.UP); // Take the cross product of the vector and the up vector. This gives us the camera relative right vector.
 				glm::vec3 camera_up_vector = glm::cross(camera_right_vector, camera_look_vector); // Take the cross product of the right vector and the look vector. This is the camera relative up vector*/
 
 
 				if (mouseDX < 0) {
-					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_right_vector; // move camera relative right
+					mainCamera.cameraPosition += mainCamera.strafeSpeed * camera_right_vector; // move camera relative right
 					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_right_vector; // target must be moved equally
 				}
 				else if (mouseDX > 0) {
-					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // move camera relative left
+					mainCamera.cameraPosition -= mainCamera.strafeSpeed * camera_right_vector; // move camera relative left
 					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_right_vector; // target must me moved equally
 				}
 
 				/* Recalculate look,right and up vectors in case they were changed since last calculated */
-				camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.transformCartesian);
+				camera_look_vector = glm::normalize(mainCamera.targetTransformCartesian - mainCamera.cameraPosition);
 				camera_right_vector = glm::cross(camera_look_vector, Vector3.UP);
 				camera_up_vector = glm::cross(camera_right_vector, camera_look_vector);
 
 				if (mouseDY < 0) {
-					mainCamera.transformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // move camera relative down
+					mainCamera.cameraPosition -= mainCamera.strafeSpeed * camera_up_vector; // move camera relative down
 					mainCamera.targetTransformCartesian -= mainCamera.strafeSpeed * camera_up_vector; // target must be moved equally
 				}
 				else if (mouseDY > 0) {
-					mainCamera.transformCartesian += mainCamera.strafeSpeed * camera_up_vector; // move camera relative up
+					mainCamera.cameraPosition += mainCamera.strafeSpeed * camera_up_vector; // move camera relative up
 					mainCamera.targetTransformCartesian += mainCamera.strafeSpeed * camera_up_vector; // target must be moved equaly
 				}
 			}
@@ -827,10 +828,10 @@ int main(int argc, char** argv)
 			float newCameraX = mainCamera.orbitalRadius * cos(mainCamera.orbitalInclination) * sin(mainCamera.orbitalAzimuth); // convert spherical coordinate to cartesian coordinates
 			float newCameraY = mainCamera.orbitalRadius * sin(mainCamera.orbitalInclination); // convert spherical coordinate to cartesian coordinates
 
-			mainCamera.transformCartesian = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
+			mainCamera.cameraPosition = glm::vec3(newCameraX, newCameraY, newCameraZ); // set the camera cartesian transform to the main camera
 
 			glm::mat4 viewMatrix = Camera_LookAt(
-				mainCamera.transformCartesian, //eye 
+				mainCamera.cameraPosition, //eye 
 				mainCamera.targetTransformCartesian, // target
 				Vector3.UP // up
 			); // after being set in the right cartesian position, finally look at the target
@@ -860,6 +861,10 @@ int main(int argc, char** argv)
 			glUniformMatrix4fv(View, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
 			glUniformMatrix4fv(Proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
 			glUniformMatrix4fv(Model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
+
+			glUniform3f(viewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
+			std::cout << mainCamera.cameraPosition.x << " " << mainCamera.cameraPosition.y << " " << mainCamera.cameraPosition.z << std::endl;
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
