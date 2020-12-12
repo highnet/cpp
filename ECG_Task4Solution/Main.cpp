@@ -168,6 +168,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		circleVertices.push_back(circlePosition);
 	}
 
+	// construct top and bottom circles
 	for (int sign = -1; sign < 2; sign += 2) {
 		for (int i = 0; i < segments; i++) {
 
@@ -213,6 +214,67 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		}
 	}
 
+	// 1 side face per segment, each face has 6 vertices
+	for (int i = 0; i < segments; i++) {
+
+		glm::vec3 v0(circleVertices[i].x, circleVertices[i].y, circleVertices[i].z);
+		glm::vec3 v1(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v2(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
+		glm::vec3 v3(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v4(circleVertices[i == segments - 1 ? 0 : i + 1].x, -1 * circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v5(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
+
+		glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+		//triangle 1
+		data.push_back(v0.x); //vx
+		data.push_back(v0.y); //vy
+		data.push_back(v0.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+
+		data.push_back(v1.x); //vx
+		data.push_back(v1.y); //vy
+		data.push_back(v1.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+
+		data.push_back(v2.x); //vx
+		data.push_back(v2.y); //vy
+		data.push_back(v2.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+		//triangle 2
+		data.push_back(v3.x); //vx
+		data.push_back(v3.y); //vy
+		data.push_back(v3.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+
+		data.push_back(v4.x); //vx
+		data.push_back(v4.y); //vy
+		data.push_back(v4.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+
+		data.push_back(v5.x); //vx
+		data.push_back(v5.y); //vy
+		data.push_back(v5.z); //vz
+
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+	}
+
 }
 
 class Cylinder {
@@ -227,11 +289,11 @@ public:
 	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments , GLint vertexPositions,GLint vertexNormals,float r,float g,float b,float ka, float kd ,float ks,glm::vec3 position); // cylinder constructor
 };
 
-Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
-	transform = transform;
+Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
 	mesh = CylinderMesh(radius, length, segments);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
+	transform = glm::translate(_transform, position);
 
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -361,8 +423,9 @@ public:
 };
 
 Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 _position, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals, float ka, float kd, float ks) {
-	transform = _transform;
+
 	position = _position;
+	transform = glm::translate(_transform, position);
 	mesh = CuboidMesh(length, height, width);
 	material = Material(r, g, b,ka,kd,ks);
 	glGenVertexArrays(1, &Vao); // create the VAO
@@ -729,8 +792,6 @@ int main(int argc, char** argv)
 		0.5f // ks
 	);
 
-	cuboid.transform = glm::translate(cuboid.transform, cuboid.position);
-
 	// cuboid definition generation
 	Cuboid cuboid2(
 		glm::mat4(1.0f), // starting transform
@@ -747,16 +808,15 @@ int main(int argc, char** argv)
 		0.5f, // kd
 		0.1f // ks
 	);
-	cuboid2.transform = glm::translate(cuboid2.transform, cuboid2.position);
 
 
 	// Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		0.6f, // starting radius
+		1.0f, // starting radius
 		2.0f, // starting length
-		7, // number of segments
+		64, // number of segments
 		phongShader.vertexPositions, // attribute ID for vertex position
 		phongShader.vertexNormals,
 		0.0f, // r
@@ -765,7 +825,23 @@ int main(int argc, char** argv)
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f, // ks
-		glm::vec3(0.0f, 0.0f, 0.0f)
+		glm::vec3(4.0f, 7.0f, 0.0f)
+		);
+
+	Cylinder cylinder2(
+		glm::mat4(1.0f), // starting transform
+		1.0f, // starting radius
+		2.0f, // starting length
+		64, // number of segments
+		gouradShader.vertexPositions, // attribute ID for vertex position
+		gouradShader.vertexNormals,
+		1.0f, // r
+		1.0f, // g
+		0.0f, // b
+		0.05f, // ka 
+		0.8f, // kd
+		0.5f, // ks
+		glm::vec3(-4.0f, 7.0f, 0.0f)
 	);
 
 	//generate camera
@@ -909,7 +985,8 @@ int main(int argc, char** argv)
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource);
 			RenderCuboid(cuboid2, gouradShader, viewMatrix, mainCamera, pointLightSource);
 			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource);
-	
+			RenderCylinder(cylinder2, gouradShader, viewMatrix, mainCamera, pointLightSource);
+
 			glfwSwapBuffers(window); // swap buffer
 		}
 	}
