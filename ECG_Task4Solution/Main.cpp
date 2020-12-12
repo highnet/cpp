@@ -143,6 +143,67 @@ PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::ve
 	glEnableVertexAttribArray(0);
 }
 
+
+
+class SphereMesh {
+public:
+	std::vector<float> data; // dynamic vertices array
+	SphereMesh(); // default constructor
+	SphereMesh(float radius); // cylinder mesh  constructor
+};
+
+SphereMesh::SphereMesh() { // default constructor
+
+}
+
+SphereMesh::SphereMesh(float radius) {
+
+
+}
+
+class Sphere {
+public:
+	CylinderMesh mesh; // mesh of the cylinder
+	glm::mat4 transform; // transform of the cylinder
+	GLuint Vao; // vertex array object
+	GLuint Vbo; // vertex buffer object
+	GLuint Ebo; // element buffer object
+	Material material;
+	glm::vec3 position;
+	Sphere::Sphere(glm::mat4 transform, float radius, float length,  GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+};
+
+Sphere::Sphere(glm::mat4 _transform, float radius, float length,  GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
+	mesh = SphereMesh(radius);
+	material = Material(r, g, b, ka, kd, ks);
+	position = position;
+	transform = glm::translate(_transform, position);
+
+
+	/*
+	glGenVertexArrays(1, &Vao); // create the VAO
+	glBindVertexArray(Vao); // bind the VAO
+
+	glGenBuffers(1, &Vbo); // generate the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
+	glBufferData(GL_ARRAY_BUFFER, mesh.data.size() * sizeof(float), &mesh.data[0], GL_STATIC_DRAW);
+
+
+	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
+	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+
+	glEnableVertexAttribArray(vertexNormals); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(vertexNormals, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+
+	glEnableVertexAttribArray(0); // disable the VAO
+	*/
+
+}
+
+
+/// 
+
 class CylinderMesh {
 public:
 	std::vector<float> data; // dynamic vertices array
@@ -647,6 +708,39 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glBindVertexArray(0); // unbind VAO
 }
 
+void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+	/////DRAW cylinder1 with phong shader
+	/*
+	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
+
+	glUniformMatrix4fv(shader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+	glUniformMatrix4fv(shader.proj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)); // push projection matrix to shader
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
+	glUniform3f(shader.viewPosition, camera.cameraPosition.x, camera.cameraPosition.y, camera.cameraPosition.z); // push color to shader
+
+	glBindVertexArray(object.Vao); //  bind cuboid VAO
+
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
+	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
+
+	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
+	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
+	float constant = lightSource.attenuation_Constant;
+	float linear = lightSource.attenuation_Linear;
+	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
+	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform1f(shader.k_ambient, object.material.k_ambient);
+	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
+	glUniform1f(shader.k_specular, object.material.k_specular);
+
+	glDrawArrays(GL_TRIANGLES, 0, object.mesh.data.size());
+	glBindVertexArray(0); // unbind VAO
+	*/
+}
+
 void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
 	/////DRAW cylinder1 with phong shader
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
@@ -778,7 +872,7 @@ int main(int argc, char** argv)
 	// cuboid definition generation
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		glm::vec3(4.0f,0.0f,0.0f),
+		glm::vec3(4.0f,-3.5f,0.0f),
 		3.0f, // starting length
 		3.0f, // starting height
 		3.0f, // starting width
@@ -795,7 +889,7 @@ int main(int argc, char** argv)
 	// cuboid definition generation
 	Cuboid cuboid2(
 		glm::mat4(1.0f), // starting transform
-		glm::vec3(-4.0f, 0.0f, 0.0f),
+		glm::vec3(-4.0f, -3.5f, 0.0f),
 	    3.0, // starting length
 		3.0, // starting height
 		3.0, // starting width
@@ -814,8 +908,8 @@ int main(int argc, char** argv)
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		1.0f, // starting radius
-		2.0f, // starting length
+		1.5, // starting radius
+		3.0, // starting length
 		64, // number of segments
 		phongShader.vertexPositions, // attribute ID for vertex position
 		phongShader.vertexNormals,
@@ -825,13 +919,13 @@ int main(int argc, char** argv)
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f, // ks
-		glm::vec3(4.0f, 7.0f, 0.0f)
+		glm::vec3(4.0f, 3.5f, 0.0f)
 		);
 
 	Cylinder cylinder2(
 		glm::mat4(1.0f), // starting transform
-		1.0f, // starting radius
-		2.0f, // starting length
+		1.5, // starting radius
+		3.0, // starting length
 		64, // number of segments
 		gouradShader.vertexPositions, // attribute ID for vertex position
 		gouradShader.vertexNormals,
@@ -841,7 +935,7 @@ int main(int argc, char** argv)
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f, // ks
-		glm::vec3(-4.0f, 7.0f, 0.0f)
+		glm::vec3(-4.0f, 3.5f, 0.0f)
 	);
 
 	//generate camera
