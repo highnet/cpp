@@ -158,29 +158,262 @@ SphereMesh::SphereMesh() { // default constructor
 
 SphereMesh::SphereMesh(float radius) {
 
+	int segments = 3;
+	std::vector<glm::vec3> sphereVertices;
+
+
+	for (unsigned int i = 1; i < segments; i++) {
+		float verticalAngle = float(i) * glm::pi<float>() / float(segments);
+		for (unsigned int j = 0; j < segments; j++) {
+			float horizontalAngle = float(j) * 2.0f * glm::pi<float>() / float(segments);
+			glm::vec3 position = glm::vec3(
+				radius * glm::sin(verticalAngle) * glm::cos(horizontalAngle),
+				radius * glm::cos(verticalAngle),
+				radius * glm::sin(verticalAngle) * glm::sin(horizontalAngle)
+			);
+			sphereVertices.push_back(position);
+		}
+	}
+		
+		// mid top segments
+		for (int i = 0; i < segments; i++) {
+		glm::vec3 midPointTop = glm::vec3(0.0f, 1.0 * radius, 0.0f);
+		glm::vec3 surfaceNormal;
+
+			//mid point
+			data.push_back(midPointTop.x); //vx
+			data.push_back(midPointTop.y); //vy
+			data.push_back(midPointTop.z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(1.0f); //ny
+			data.push_back(0.0); //nz
+
+
+			// first circle vertex
+			if (i != segments - 1) {
+				data.push_back(sphereVertices[i + 1].x); //vx
+				data.push_back(sphereVertices[i + 1].y); //vy
+				data.push_back(sphereVertices[i + 1].z); //vz
+
+			}
+			else {
+				data.push_back(sphereVertices[0].x);//vx
+				data.push_back(sphereVertices[0].y); //vy
+				data.push_back(sphereVertices[0].z); //vz
+			}
+
+
+			data.push_back(0.0); //nx
+			data.push_back(1.0f); //ny
+			data.push_back(0.0); //nz
+
+			//second circle vertex
+			data.push_back(sphereVertices[i].x);//vx
+			data.push_back(sphereVertices[i].y);//vy
+			data.push_back(sphereVertices[i].z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(1.0f); //ny
+			data.push_back(0.0); //nz
+
+		}
+	
+		//mid bottom segments
+		for (int i = 0; i < segments; i++) {
+			glm::vec3 midPointTop = glm::vec3(0.0f, -1.0 * radius, 0.0f);
+
+			//mid point
+			data.push_back(midPointTop.x); //vx
+			data.push_back(midPointTop.y); //vy
+			data.push_back(midPointTop.z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+			//second circle vertex
+			data.push_back(sphereVertices[i].x);//vx
+			data.push_back(-1.0 * sphereVertices[i].y);//vy
+			data.push_back(sphereVertices[i].z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+			// first circle vertex
+			if (i != segments - 1) {
+				data.push_back(sphereVertices[i + 1].x); //vx
+				data.push_back(-1.0 * sphereVertices[i + 1].y); //vy
+				data.push_back(sphereVertices[i + 1].z); //vz
+
+			}
+			else {
+				data.push_back(sphereVertices[0].x);//vx
+				data.push_back(-1.0 * sphereVertices[0].y); //vy
+				data.push_back(sphereVertices[0].z); //vz
+			}
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+
+
+		}
+	
+		// rest of segments
+		for (int j = 0; j < sphereVertices.size() - segments; j+=segments) {
+		glm::vec3 v0, v1, v2, v3, v4, v5;
+		for (int i = 0; i < segments; i++) {
+
+			if (i < segments - 1) {
+				glm::vec3 v0(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
+				glm::vec3 v1(sphereVertices[segments + i + 1 + j].x, sphereVertices[segments + i + 1 + j].y, sphereVertices[segments + i + 1 + j].z);
+				glm::vec3 v2(sphereVertices[segments + i + j].x, sphereVertices[segments + i + j].y, sphereVertices[segments + i + j].z);
+
+				glm::vec3 v3(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
+				glm::vec3 v5(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
+				glm::vec3 v4(sphereVertices[segments + i + 1 + j].x, sphereVertices[segments + i + 1 + j].y, sphereVertices[segments + i + 1 + j].z);
+
+				glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+				//triangle 1
+				data.push_back(v0.x); //vx
+				data.push_back(v0.y); //vy
+				data.push_back(v0.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v1.x); //vx
+				data.push_back(v1.y); //vy
+				data.push_back(v1.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v2.x); //vx
+				data.push_back(v2.y); //vy
+				data.push_back(v2.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				//triangle 2
+				data.push_back(v3.x); //vx
+				data.push_back(v3.y); //vy
+				data.push_back(v3.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v4.x); //vx
+				data.push_back(v4.y); //vy
+				data.push_back(v4.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v5.x); //vx
+				data.push_back(v5.y); //vy
+				data.push_back(v5.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+			}
+			else {
+				glm::vec3 v0(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
+				glm::vec3 v1(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
+				glm::vec3 v2(sphereVertices[segments + i + j].x, sphereVertices[segments + i + j].y, sphereVertices[segments + i + j].z);
+
+				glm::vec3 v3(sphereVertices[i - segments + 1 + j].x, sphereVertices[i - segments + 1 + j].y, sphereVertices[i - segments + 1 + j].z);
+				glm::vec3 v5(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
+				glm::vec3 v4(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
+
+				glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+				//triangle 1
+				data.push_back(v0.x); //vx
+				data.push_back(v0.y); //vy
+				data.push_back(v0.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v1.x); //vx
+				data.push_back(v1.y); //vy
+				data.push_back(v1.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v2.x); //vx
+				data.push_back(v2.y); //vy
+				data.push_back(v2.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				//triangle 2
+				data.push_back(v3.x); //vx
+				data.push_back(v3.y); //vy
+				data.push_back(v3.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v4.x); //vx
+				data.push_back(v4.y); //vy
+				data.push_back(v4.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+
+				data.push_back(v5.x); //vx
+				data.push_back(v5.y); //vy
+				data.push_back(v5.z); //vz
+
+				data.push_back(surfaceNormal.x); //nx
+				data.push_back(surfaceNormal.y); //ny
+				data.push_back(surfaceNormal.z); //nz
+			}
+		}
+	}
 
 }
 
+	
+
+
 class Sphere {
 public:
-	CylinderMesh mesh; // mesh of the cylinder
+	SphereMesh mesh; // mesh of the cylinder
 	glm::mat4 transform; // transform of the cylinder
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
 	Material material;
 	glm::vec3 position;
-	Sphere::Sphere(glm::mat4 transform, float radius, float length,  GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+	Sphere::Sphere(glm::mat4 transform, float radius,   GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
 };
 
-Sphere::Sphere(glm::mat4 _transform, float radius, float length,  GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
+Sphere::Sphere(glm::mat4 _transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
 	mesh = SphereMesh(radius);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
 	transform = glm::translate(_transform, position);
 
-
-	/*
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 
@@ -188,16 +421,14 @@ Sphere::Sphere(glm::mat4 _transform, float radius, float length,  GLint vertexPo
 	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
 	glBufferData(GL_ARRAY_BUFFER, mesh.data.size() * sizeof(float), &mesh.data[0], GL_STATIC_DRAW);
 
-
 	glEnableVertexAttribArray(vertexPositions); // set position attribute vertex layout  1/2
 	glVertexAttribPointer(vertexPositions, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
 
 	glEnableVertexAttribArray(vertexNormals); // set color attribute vertex layout 1/2
 	glVertexAttribPointer(vertexNormals, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
-
 	glEnableVertexAttribArray(0); // disable the VAO
-	*/
+
 
 }
 
@@ -230,10 +461,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 	}
 
 	// construct top and bottom circles
-	for (int sign = -1; sign < 2; sign += 2) {
+
 		for (int i = 0; i < segments; i++) {
 
-			glm::vec3 midPoint = glm::vec3(0.0f, sign * 0.5f * height, 0.0f);
+			glm::vec3 midPoint = glm::vec3(0.0f, 1.0f * 0.5f * height, 0.0f);
 
 			//mid point
 			data.push_back(midPoint.x); //vx
@@ -241,39 +472,83 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 			data.push_back(midPoint.z); //vz
 
 			data.push_back(0.0); //nx
-			data.push_back(sign); //ny
+			data.push_back(1.0f); //ny
 			data.push_back(0.0); //nz
 
 
 			// first circle vertex
 			if (i != segments - 1) {
 				data.push_back(circleVertices[i + 1].x); //vx
-				data.push_back(sign * circleVertices[i + 1].y); //vy
+				data.push_back(1.0f * circleVertices[i + 1].y); //vy
 				data.push_back(circleVertices[i + 1].z); //vz
 
 			}
 			else {
 				data.push_back(circleVertices[0].x);//vx
-				data.push_back(sign * circleVertices[0].y); //vy
+				data.push_back(1.0f * circleVertices[0].y); //vy
 				data.push_back(circleVertices[0].z); //vz
 			}
 
 			data.push_back(0.0); //nx
-			data.push_back(sign); //ny
+			data.push_back(1.0f); //ny
 			data.push_back(0.0); //nz
 
 
 			//second circle vertex
 			data.push_back(circleVertices[i].x);//vx
-			data.push_back(sign * circleVertices[i].y);//vy
+			data.push_back(1.0f * circleVertices[i].y);//vy
 			data.push_back(circleVertices[i].z); //vz
 
 			data.push_back(0.0); //nx
-			data.push_back(sign); //ny
+			data.push_back(1.0f); //ny
 			data.push_back(0.0); //nz
 
 		}
-	}
+
+		for (int i = 0; i < segments; i++) {
+
+			glm::vec3 midPoint = glm::vec3(0.0f, -1.0f * 0.5f * height, 0.0f);
+
+			//mid point
+			data.push_back(midPoint.x); //vx
+			data.push_back(midPoint.y); //vy
+			data.push_back(midPoint.z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+						//second circle vertex
+			data.push_back(circleVertices[i].x);//vx
+			data.push_back(-1.0f * circleVertices[i].y);//vy
+			data.push_back(circleVertices[i].z); //vz
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+			// first circle vertex
+			if (i != segments - 1) {
+				data.push_back(circleVertices[i + 1].x); //vx
+				data.push_back(-1.0f * circleVertices[i + 1].y); //vy
+				data.push_back(circleVertices[i + 1].z); //vz
+
+			}
+			else {
+				data.push_back(circleVertices[0].x);//vx
+				data.push_back(-1.0f * circleVertices[0].y); //vy
+				data.push_back(circleVertices[0].z); //vz
+			}
+
+			data.push_back(0.0); //nx
+			data.push_back(-1.0f); //ny
+			data.push_back(0.0); //nz
+
+
+
+
+		}
+
 
 	// 1 side face per segment, each face has 6 vertices
 	for (int i = 0; i < segments; i++) {
@@ -710,7 +985,7 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 
 void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
 	/////DRAW cylinder1 with phong shader
-	/*
+
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
 
 	glUniformMatrix4fv(shader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
@@ -738,7 +1013,7 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 
 	glDrawArrays(GL_TRIANGLES, 0, object.mesh.data.size());
 	glBindVertexArray(0); // unbind VAO
-	*/
+
 }
 
 void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
@@ -938,8 +1213,25 @@ int main(int argc, char** argv)
 		glm::vec3(-4.0f, 3.5f, 0.0f)
 	);
 
+
+	Sphere sphere(
+		glm::mat4(1.0f), // starting transform
+		3.0, // starting radius
+		gouradShader.vertexPositions, // attribute ID for vertex position
+		gouradShader.vertexNormals,
+		1.0f, // r
+		1.0f, // g
+		0.0f, // b
+		0.05f, // ka 
+		0.8f, // kd
+		0.5f, // ks
+		glm::vec3(0.0f, 0.0f, 0.0f)
+	);
+
+		// Sphere::Sphere(glm::mat4 transform, float radius, float length, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+		
 	//generate camera
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // set the as background color
+	glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -1080,6 +1372,7 @@ int main(int argc, char** argv)
 			RenderCuboid(cuboid2, gouradShader, viewMatrix, mainCamera, pointLightSource);
 			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource);
 			RenderCylinder(cylinder2, gouradShader, viewMatrix, mainCamera, pointLightSource);
+			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource);
 
 			glfwSwapBuffers(window); // swap buffer
 		}
