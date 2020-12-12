@@ -143,7 +143,6 @@ PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::ve
 	glEnableVertexAttribArray(0);
 }
 
-// ===CYLINDER===
 class CylinderMesh {
 public:
 	std::vector<float> data; // dynamic vertices array
@@ -253,7 +252,6 @@ Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments
 
 }
 
-// ==CUBOID==
 class CuboidMesh {
 public:
 	float data[216] = {
@@ -555,6 +553,84 @@ struct InputManager {
 	double old_mouseY = 0.0;
 };
 
+void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+	/////DRAW cuboid1 with phong shader
+	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
+
+	glUniformMatrix4fv(shader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+	glUniformMatrix4fv(shader.proj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)); // push projection matrix to shader
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
+	glUniform3f(shader.viewPosition, camera.cameraPosition.x, camera.cameraPosition.y, camera.cameraPosition.z); // push color to shader
+
+	glBindVertexArray(object.Vao); //  bind cuboid VAO
+
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
+	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
+
+	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
+	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
+	float constant = lightSource.attenuation_Constant;
+	float linear = lightSource.attenuation_Linear;
+	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
+	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform1f(shader.k_ambient, object.material.k_ambient);
+	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
+	glUniform1f(shader.k_specular, object.material.k_specular);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0); // unbind VAO
+}
+
+void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+	/////DRAW cylinder1 with phong shader
+	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
+
+	glUniformMatrix4fv(shader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+	glUniformMatrix4fv(shader.proj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)); // push projection matrix to shader
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
+	glUniform3f(shader.viewPosition, camera.cameraPosition.x, camera.cameraPosition.y, camera.cameraPosition.z); // push color to shader
+
+	glBindVertexArray(object.Vao); //  bind cuboid VAO
+
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
+	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
+
+	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
+	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
+	float constant = lightSource.attenuation_Constant;
+	float linear = lightSource.attenuation_Linear;
+	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
+	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform1f(shader.k_ambient, object.material.k_ambient);
+	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
+	glUniform1f(shader.k_specular, object.material.k_specular);
+
+	glDrawArrays(GL_TRIANGLES, 0, object.mesh.data.size());
+	glBindVertexArray(0); // unbind VAO
+}
+
+void RenderLightSource(PointLightSource lightSource, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera) {
+	//////// draw light source with basic shader
+	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
+
+	glUniformMatrix4fv(shader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+	glUniformMatrix4fv(shader.proj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)); // push projection matrix to shader
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+
+	glBindVertexArray(lightSource.Vao);
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(lightSource.transform)); // push cylinder transform to shader
+	glUniform4f(shader.lightColor, lightSource.color.x, lightSource.color.y, lightSource.color.z, 1.0); // push color to shader
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0); // unbind VAO
+	/////
+}
+
 // Global variables 
 InputManager Input;
 Vectors Vector3;
@@ -829,108 +905,11 @@ int main(int argc, char** argv)
 
 			glFrontFace(GL_CCW);		// counter clockwise
 
-			/////DRAW cuboid1 with phong shader
-			glUseProgram(phongShader.program); // Load the shader into the rendering pipeline 
-
-			glUniformMatrix4fv(phongShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(phongShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
-
-			glUniform3f(phongShader.viewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
-
-			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
-
-			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
-			glUniform3f(phongShader.materialColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
-
-			glm::vec3 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
-			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
-			float constant = pointLightSource.attenuation_Constant;
-			float linear = pointLightSource.attenuation_Linear;
-			float quadratic = pointLightSource.attenuation_Quadratic;
-			glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(phongShader.lightColor, intensity.x,intensity.y,intensity.z); // push color to shader
-			glUniform3f(phongShader.lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
-			glUniform1f(phongShader.k_ambient, cuboid.material.k_ambient);
-			glUniform1f(phongShader.k_diffuse, cuboid.material.k_diffuse);
-			glUniform1f(phongShader.k_specular, cuboid.material.k_specular);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0); // unbind VAO
-
-			/////DRAW cylinder1 with phong shader
-			glUseProgram(phongShader.program); // Load the shader into the rendering pipeline 
-
-			glUniformMatrix4fv(phongShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(phongShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
-
-			glUniform3f(phongShader.viewPosition, mainCamera.cameraPosition.x, mainCamera.cameraPosition.y, mainCamera.cameraPosition.z); // push color to shader
-
-			glBindVertexArray(cylinder.Vao); //  bind cuboid VAO
-
-			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cuboid transform to shader
-			glUniform3f(phongShader.materialColor, cylinder.material.baseColor.r, cylinder.material.baseColor.g, cylinder.material.baseColor.b); // push color to shader
-
-			energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
-			 distance = sqrt(pow((cylinder.position.x - pointLightSource.position.x), 2) + pow((cylinder.position.y - pointLightSource.position.y), 2) + pow((cylinder.position.z - pointLightSource.position.z), 2));
-			 constant = pointLightSource.attenuation_Constant;
-			 linear = pointLightSource.attenuation_Linear;
-			 quadratic = pointLightSource.attenuation_Quadratic;
-			intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(phongShader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-			glUniform3f(phongShader.lightPosition, pointLightSource.position.x, pointLightSource.position.y, pointLightSource.position.z); // push color to shader
-			glUniform1f(phongShader.k_ambient, cylinder.material.k_ambient);
-			glUniform1f(phongShader.k_diffuse, cylinder.material.k_diffuse);
-			glUniform1f(phongShader.k_specular, cylinder.material.k_specular);
-
-			glDrawArrays(GL_TRIANGLES, 0, cylinder.mesh.data.size());
-			glBindVertexArray(0); // unbind VAO
-			
-			////////////draw cuboid2 with gourad shader
-			glUseProgram(gouradShader.program); // Load the shader into the rendering pipeline 
-
-			glUniformMatrix4fv(gouradShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(gouradShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(gouradShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
-
-			glUniform3f(gouradShader.viewPosition, mainCamera.cameraPosition.x, mainCamera.cameraPosition.y, mainCamera.cameraPosition.z); // push color to shader
-
-			glBindVertexArray(cuboid2.Vao); //  bind cuboid VAO
-
-			glUniformMatrix4fv(gouradShader.model, 1, GL_FALSE, glm::value_ptr(cuboid2.transform)); // push cuboid transform to shader
-			glUniform3f(gouradShader.materialColor, cuboid2.material.baseColor.r, cuboid2.material.baseColor.g, cuboid2.material.baseColor.b); // push color to shader
-
-			 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
-			 distance = sqrt(pow((cuboid2.position.x - pointLightSource.position.x), 2) + pow((cuboid2.position.y - pointLightSource.position.y), 2) + pow((cuboid2.position.z - pointLightSource.position.z), 2));
-			 constant = pointLightSource.attenuation_Constant;
-			 linear = pointLightSource.attenuation_Linear;
-			 quadratic = pointLightSource.attenuation_Quadratic;
-			intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(gouradShader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-			glUniform3f(gouradShader.lightPosition, pointLightSource.position.x, pointLightSource.position.y, pointLightSource.position.z); // push color to shader
-			glUniform1f(gouradShader.k_ambient, cuboid2.material.k_ambient);
-			glUniform1f(gouradShader.k_diffuse, cuboid2.material.k_diffuse);
-			glUniform1f(gouradShader.k_specular, cuboid2.material.k_specular);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0); // unbind VAO
-			
-
-			//////// draw light source with basic shader
-			glUseProgram(basicShader.program); // Load the shader into the rendering pipeline 
-
-			glUniformMatrix4fv(basicShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(basicShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(basicShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
-
-			glBindVertexArray(pointLightSource.Vao);
-			glUniformMatrix4fv(basicShader.model, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
-			glUniform4f(basicShader.lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0); // unbind VAO
-			/////
-
+			RenderLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
+			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource);
+			RenderCuboid(cuboid2, gouradShader, viewMatrix, mainCamera, pointLightSource);
+			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource);
+	
 			glfwSwapBuffers(window); // swap buffer
 		}
 	}
