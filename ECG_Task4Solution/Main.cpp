@@ -407,6 +407,128 @@ OrbitalCamera::OrbitalCamera(glm::vec3 _transformCartesian, float _orbitalRadius
 	orbitalSpeedZoom = _orbitalSpeedZoom; // float 
 }
 
+class Shader {
+public:
+	GLuint program;
+	GLint view;
+	GLint proj;
+	GLint model;
+	GLint materialColor;
+	GLint lightColor;
+	GLint lightPosition;
+	GLint viewPosition;
+	GLint k_ambient;
+	GLint k_diffuse;
+	GLint k_specular;
+	GLint vertexPositions;
+	GLint vertexNormals;
+	Shader::Shader(string relativePathVert,string relativePathFrag, string type);
+};
+
+Shader::Shader(string relativePathVert,string relativePathFrag,string type) {
+	// Compile Vertex Shader 
+	const char* vertexSource; // create character list
+	GLuint vertexShader; // create vertex shader id
+	std::ifstream is_vs(relativePathVert); // read shader file
+	const std::string f_vs((std::istreambuf_iterator<char>(is_vs)), std::istreambuf_iterator<char>()); // string buffer
+	vertexSource = f_vs.c_str(); // convert character list to string
+	vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
+	glShaderSource(vertexShader, 1, &vertexSource, 0); // link source
+	glCompileShader(vertexShader); // Compile the vertex shader
+
+	// Check for vs errors
+	GLint succeded_vs;
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &succeded_vs);
+	if (succeded_vs == GL_FALSE) {
+		GLint logSize;
+		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logSize);
+		GLchar* message = new char[logSize];
+		glGetShaderInfoLog(vertexShader, logSize, NULL, message);
+		std::cerr << message;
+		delete[] message;
+	}
+
+	// Compile Fragment Shader 
+	const char* fragmentSource; // create character list 
+	GLuint fragmentShader; // create frament shader id
+	std::ifstream is_fs(relativePathFrag);// read shader file
+	const std::string f_fs((std::istreambuf_iterator<char>(is_fs)), std::istreambuf_iterator<char>()); // string buffer
+	fragmentSource = f_fs.c_str(); // conver character list to string
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
+	glShaderSource(fragmentShader, 1, &fragmentSource, 0); //link source
+	glCompileShader(fragmentShader); // Compile the fragment shader
+
+	// Check for fs errors
+	GLint succeded_fs;
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &succeded_fs);
+	if (succeded_fs == GL_FALSE) {
+		GLint logSize;
+		glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+		GLchar* message = new char[logSize];
+		glGetShaderInfoLog(fragmentShader, logSize, NULL, message);
+		std::cerr << message;
+		delete[] message;
+	}
+
+	// Compile Shader Program 
+
+	program = glCreateProgram(); // create program
+	glAttachShader(program, vertexShader); // attach shader
+	glAttachShader(program, fragmentShader); // attach shader
+	glLinkProgram(program); // link program
+
+	// check for sp errors
+	int IsLinked;
+	int maxLength;
+	char* shaderProgramInfoLog;
+	glGetProgramiv(program, GL_LINK_STATUS, (int*)&IsLinked);
+	if (IsLinked == FALSE)
+	{
+		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+		/* The maxLength includes the NULL character */
+		shaderProgramInfoLog = (char*)malloc(maxLength);
+
+		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
+		glGetProgramInfoLog(program, maxLength, &maxLength, shaderProgramInfoLog);
+
+		std::cerr << shaderProgramInfoLog; // display the error log
+		free(shaderProgramInfoLog);
+	}
+
+
+
+	// register debug callback
+#if _DEBUG
+	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
+#endif
+
+		// get shader program uniform/attribute IDs
+	view = glGetUniformLocation(program, "view"); // get uniform ID for view matrix
+	proj = glGetUniformLocation(program, "proj"); // get uniform ID for projection matrix 
+	model = glGetUniformLocation(program, "model"); // get uniform ID for model matrix
+
+	vertexPositions = glGetAttribLocation(program, "position"); // get attribute ID for vertex position
+
+	if (type == "phong" || "gourad") {
+	materialColor = glGetUniformLocation(program, "materialColor"); // get uniform ID for out-color vector
+	lightPosition = glGetUniformLocation(program, "lightPos"); // get uniform ID for 
+	viewPosition = glGetUniformLocation(program, "viewPos"); // get uniform ID for 
+	lightColor = glGetUniformLocation(program, "lightColor"); // get uniform ID for 
+
+	k_ambient = glGetUniformLocation(program, "k_ambient"); // get uniform ID for 
+	k_diffuse = glGetUniformLocation(program, "k_diffuse"); // get uniform ID for 
+	k_specular = glGetUniformLocation(program, "k_specular"); // get uniform ID for 
+	vertexNormals = glGetAttribLocation(program, "normal"); // get attribute ID for vertex position
+	}
+	if (type == "basic") {
+		lightColor = glGetUniformLocation(program, "color"); // get uniform ID for 
+	}
+
+}
+
 struct Vectors { // Shorthand representation of 3D vectors in this engine
 	glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -507,288 +629,10 @@ int main(int argc, char** argv)
 	glfwSetScrollCallback(window, scrollCallBack); // set callback for scroll wheel
 
 
-	//////////////////////////////////////////////////////////////PHONG SHADER///////////////////////////////////////////////////////////
-	// Compile Vertex Shader 
-	const char* vertexSource; // create character list
-	GLuint phongVertexShader; // create vertex shader id
-	std::ifstream is_vs("assets/PhongShader.vert"); // read shader file
-	const std::string f_vs((std::istreambuf_iterator<char>(is_vs)), std::istreambuf_iterator<char>()); // string buffer
-	vertexSource = f_vs.c_str(); // convert character list to string
-	phongVertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
-	glShaderSource(phongVertexShader, 1, &vertexSource, 0); // link source
-	glCompileShader(phongVertexShader); // Compile the vertex shader
-
-	// Check for vs errors
-	GLint succeded_vs;
-	glGetShaderiv(phongVertexShader, GL_COMPILE_STATUS, &succeded_vs);
-	if (succeded_vs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(phongVertexShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(phongVertexShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Fragment Shader 
-	const char* fragmentSource; // create character list 
-	GLuint phongFragmentShader; // create frament shader id
-	std::ifstream is_fs("assets/PhongShader.frag");// read shader file
-	const std::string f_fs((std::istreambuf_iterator<char>(is_fs)), std::istreambuf_iterator<char>()); // string buffer
-	fragmentSource = f_fs.c_str(); // conver character list to string
-	phongFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
-	glShaderSource(phongFragmentShader, 1, &fragmentSource, 0); //link source
-	glCompileShader(phongFragmentShader); // Compile the fragment shader
-
-	// Check for fs errors
-	GLint succeded_fs;
-	glGetShaderiv(phongFragmentShader, GL_COMPILE_STATUS, &succeded_fs);
-	if (succeded_fs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(phongFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(phongFragmentShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Shader Program 
-	GLuint phongShaderProgram; // create shader program id
-	phongShaderProgram = glCreateProgram(); // create program
-	glAttachShader(phongShaderProgram, phongVertexShader); // attach shader
-	glAttachShader(phongShaderProgram, phongFragmentShader); // attach shader
-	glLinkProgram(phongShaderProgram); // link program
-
-	// check for sp errors
-	int IsLinked;
-	int maxLength;
-	char* shaderProgramInfoLog;
-	glGetProgramiv(phongShaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
-	if (IsLinked == FALSE)
-	{
-		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
-		glGetProgramiv(phongShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
-
-		/* The maxLength includes the NULL character */
-		shaderProgramInfoLog = (char*)malloc(maxLength);
-
-		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
-		glGetProgramInfoLog(phongShaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
-
-		std::cerr << shaderProgramInfoLog; // display the error log
-		free(shaderProgramInfoLog);
-	}
-
-
-
-	// register debug callback
-#if _DEBUG
-	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
-#endif
-
-	// get shader program uniform/attribute IDs
-	GLint phongView = glGetUniformLocation(phongShaderProgram, "view"); // get uniform ID for view matrix
-	GLint phongProj = glGetUniformLocation(phongShaderProgram, "proj"); // get uniform ID for projection matrix 
-	GLint phongModel = glGetUniformLocation(phongShaderProgram, "model"); // get uniform ID for model matrix
-	GLint phongMaterialColor = glGetUniformLocation(phongShaderProgram, "materialColor"); // get uniform ID for out-color vector
-	GLint phongLightColor = glGetUniformLocation(phongShaderProgram, "lightColor"); // get uniform ID for 
-	GLint phongLightPosition = glGetUniformLocation(phongShaderProgram, "lightPos"); // get uniform ID for 
-	GLint phongViewPosition = glGetUniformLocation(phongShaderProgram, "viewPos"); // get uniform ID for 
-
-	GLint phong_k_ambient = glGetUniformLocation(phongShaderProgram, "k_ambient"); // get uniform ID for 
-	GLint phong_k_diffuse = glGetUniformLocation(phongShaderProgram, "k_diffuse"); // get uniform ID for 
-	GLint phong_k_specular = glGetUniformLocation(phongShaderProgram, "k_specular"); // get uniform ID for 
-
-	GLint phongVertexPositions = glGetAttribLocation(phongShaderProgram, "position"); // get attribute ID for vertex position
-	GLint phongVertexNormals = glGetAttribLocation(phongShaderProgram, "normal"); // get attribute ID for vertex position
-
-
-	///////////////////////////////////GOURAD SHADER/////////////////////////////////////////////////////////////////////////////////////
-	// Compile Vertex Shader 
-	vertexSource; // create character list
-	GLuint gouradVertexShader; // create vertex shader id
-	std::ifstream g_is_vs("assets/GouradShader.vert"); // read shader file
-	const std::string g_f_vs((std::istreambuf_iterator<char>(g_is_vs)), std::istreambuf_iterator<char>()); // string buffer
-	vertexSource = g_f_vs.c_str(); // convert character list to string
-	gouradVertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
-	glShaderSource(gouradVertexShader, 1, &vertexSource, 0); // link source
-	glCompileShader(gouradVertexShader); // Compile the vertex shader
-
-	// Check for vs errors
-	 succeded_vs;
-	glGetShaderiv(gouradVertexShader, GL_COMPILE_STATUS, &succeded_vs);
-	if (succeded_vs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(gouradVertexShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(gouradVertexShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Fragment Shader 
-	fragmentSource; // create character list 
-	GLuint gouradFragmentShader; // create frament shader id
-	std::ifstream g_is_fs("assets/GouradShader.frag");// read shader file
-	const std::string g_f_fs((std::istreambuf_iterator<char>(g_is_fs)), std::istreambuf_iterator<char>()); // string buffer
-	fragmentSource = g_f_fs.c_str(); // conver character list to string
-	gouradFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
-	glShaderSource(gouradFragmentShader, 1, &fragmentSource, 0); //link source
-	glCompileShader(gouradFragmentShader); // Compile the fragment shader
-
-	// Check for fs errors
-	 succeded_fs;
-	glGetShaderiv(gouradFragmentShader, GL_COMPILE_STATUS, &succeded_fs);
-	if (succeded_fs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(gouradFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(gouradFragmentShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Shader Program 
-	GLuint gouradShaderProgram; // create shader program id
-	gouradShaderProgram = glCreateProgram(); // create program
-	glAttachShader(gouradShaderProgram, gouradVertexShader); // attach shader
-	glAttachShader(gouradShaderProgram, gouradFragmentShader); // attach shader
-	glLinkProgram(gouradShaderProgram); // link program
-
-	// check for sp errors
-	 IsLinked;
-	 maxLength;
-	shaderProgramInfoLog;
-	glGetProgramiv(gouradShaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
-	if (IsLinked == FALSE)
-	{
-		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
-		glGetProgramiv(gouradShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
-
-		/* The maxLength includes the NULL character */
-		shaderProgramInfoLog = (char*)malloc(maxLength);
-
-		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
-		glGetProgramInfoLog(gouradShaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
-
-		std::cerr << shaderProgramInfoLog; // display the error log
-		free(shaderProgramInfoLog);
-	}
-
-
-
-	// register debug callback
-#if _DEBUG
-	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
-#endif
-	
-	// get shader program uniform/attribute IDs
-	GLint gouradView = glGetUniformLocation(gouradShaderProgram, "view"); // get uniform ID for view matrix
-	GLint gouradProj = glGetUniformLocation(gouradShaderProgram, "proj"); // get uniform ID for projection matrix 
-	GLint gouradModel = glGetUniformLocation(gouradShaderProgram, "model"); // get uniform ID for model matrix
-	GLint gouradLightColor = glGetUniformLocation(gouradShaderProgram, "lightColor"); // get uniform ID for 
-	GLint gouradLightPosition = glGetUniformLocation(gouradShaderProgram, "lightPos"); // get uniform ID for 
-	GLint gouradViewPosition = glGetUniformLocation(gouradShaderProgram, "viewPos"); // get uniform ID for 
-	GLint gouradMaterialColor = glGetUniformLocation(gouradShaderProgram, "materialColor"); // get uniform ID for out-color vector
-
-	GLint gourad_k_ambient = glGetUniformLocation(gouradShaderProgram, "k_ambient"); // get uniform ID for 
-	GLint gourad_k_diffuse = glGetUniformLocation(gouradShaderProgram, "k_diffuse"); // get uniform ID for 
-	GLint gourad_k_specular = glGetUniformLocation(gouradShaderProgram, "k_specular"); // get uniform ID for 
-
-	GLint gouradVertexPositions = glGetAttribLocation(gouradShaderProgram, "position"); // get attribute ID for vertex position
-	GLint gouradVertexNormals = glGetAttribLocation(gouradShaderProgram, "normal"); // get attribute ID for vertex position
-
-	/////////////////////////////////////////BASIC SHADER////////////////////////////////////////////////////////////////////////////////
-
-	// Compile Vertex Shader 
-	vertexSource; // create character list
-	GLuint basicVertexShader; // create vertex shader id
-	std::ifstream b_is_vs("assets/BasicShader.vert"); // read shader file
-	const std::string b_f_vs((std::istreambuf_iterator<char>(b_is_vs)), std::istreambuf_iterator<char>()); // string buffer
-	vertexSource = b_f_vs.c_str(); // convert character list to string
-	basicVertexShader = glCreateShader(GL_VERTEX_SHADER); // Create an empty vertex shader handle
-	glShaderSource(basicVertexShader, 1, &vertexSource, 0); // link source
-	glCompileShader(basicVertexShader); // Compile the vertex shader
-
-	// Check for vs errors
-	 succeded_vs;
-	glGetShaderiv(basicVertexShader, GL_COMPILE_STATUS, &succeded_vs);
-	if (succeded_vs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(basicVertexShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(basicVertexShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Fragment Shader 
-	fragmentSource; // create character list 
-	GLuint basicFragmentShader; // create frament shader id
-	std::ifstream b_is_fs("assets/BasicShader.frag");// read shader file
-	const std::string b_f_fs((std::istreambuf_iterator<char>(b_is_fs)), std::istreambuf_iterator<char>()); // string buffer
-	fragmentSource = b_f_fs.c_str(); // conver character list to string
-	basicFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create an empty vertex shader handle
-	glShaderSource(basicFragmentShader, 1, &fragmentSource, 0); //link source
-	glCompileShader(basicFragmentShader); // Compile the fragment shader
-
-	// Check for fs errors
-	 succeded_fs;
-	glGetShaderiv(basicFragmentShader, GL_COMPILE_STATUS, &succeded_fs);
-	if (succeded_fs == GL_FALSE) {
-		GLint logSize;
-		glGetShaderiv(basicFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* message = new char[logSize];
-		glGetShaderInfoLog(basicFragmentShader, logSize, NULL, message);
-		std::cerr << message;
-		delete[] message;
-	}
-
-	// Compile Shader Program 
-	GLuint basicShaderProgram; // create shader program id
-	basicShaderProgram = glCreateProgram(); // create program
-	glAttachShader(basicShaderProgram, basicVertexShader); // attach shader
-	glAttachShader(basicShaderProgram, basicFragmentShader); // attach shader
-	glLinkProgram(basicShaderProgram); // link program
-
-	// check for sp errors
-	 IsLinked;
-	 maxLength;
-	shaderProgramInfoLog;
-	glGetProgramiv(basicShaderProgram, GL_LINK_STATUS, (int*)&IsLinked);
-	if (IsLinked == FALSE)
-	{
-		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
-		glGetProgramiv(basicShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
-
-		/* The maxLength includes the NULL character */
-		shaderProgramInfoLog = (char*)malloc(maxLength);
-
-		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
-		glGetProgramInfoLog(basicShaderProgram, maxLength, &maxLength, shaderProgramInfoLog);
-
-		std::cerr << shaderProgramInfoLog; // display the error log
-		free(shaderProgramInfoLog);
-	}
-
-	// register debug callback
-#if _DEBUG
-	glDebugMessageCallback(DebugCallback, NULL);// Register the debug callback function.
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred. 
-#endif
-
-	// get shader program uniform/attribute IDs
-	GLint basicView = glGetUniformLocation(basicShaderProgram, "view"); // get uniform ID for view matrix
-	GLint basicProj = glGetUniformLocation(basicShaderProgram, "proj"); // get uniform ID for projection matrix 
-	GLint basicModel = glGetUniformLocation(basicShaderProgram, "model"); // get uniform ID for model matrix
-	GLint basicColor = glGetUniformLocation(basicShaderProgram, "color"); // get uniform ID for out-color vector
-
-	GLint basicVertexPositions = glGetAttribLocation(basicShaderProgram, "position"); // get attribute ID for vertex position
-
-	////////////////////////////////////////////////////////////////////////
-
+	//make shaders
+	 Shader phongShader("assets/PhongShader.vert","assets/PhongShader.frag","phong");
+	 Shader gouradShader("assets/GouradShader.vert", "assets/GouradShader.frag", "gourad");
+	 Shader basicShader("assets/BasicShader.vert", "assets/BasicShader.frag", "basic");
 
 	// instantiate objects
 
@@ -802,8 +646,8 @@ int main(int argc, char** argv)
 		0.0f, // base color r
 		1.0f, // base color g
 		0.0f, // base color b
-		phongVertexPositions, // attribute ID for vertex position
-		phongVertexNormals,
+		phongShader.vertexPositions, // attribute ID for vertex position
+		phongShader.vertexNormals,
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f // ks
@@ -821,8 +665,8 @@ int main(int argc, char** argv)
 		1.0f, // base color r
 		0.0f, // base color g
 		0.0f, // base color b
-		gouradVertexPositions, // attribute ID for vertex position
-		gouradVertexNormals,
+		gouradShader.vertexPositions, // attribute ID for vertex position
+		gouradShader.vertexNormals,
 		0.01f, // ka 
 		0.5f, // kd
 		0.1f // ks
@@ -837,8 +681,8 @@ int main(int argc, char** argv)
 		0.6f, // starting radius
 		2.0f, // starting length
 		7, // number of segments
-		phongVertexPositions,
-		phongVertexNormals,
+		phongShader.vertexPositions, // attribute ID for vertex position
+		phongShader.vertexNormals,
 		0.0f, // r
 		0.0f, // g
 		1.0f, // b
@@ -847,7 +691,6 @@ int main(int argc, char** argv)
 		0.5f, // ks
 		glm::vec3(0.0f, 0.0f, 0.0f)
 	);
-
 
 	//generate camera
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // set the as background color
@@ -867,7 +710,7 @@ int main(int argc, char** argv)
 		glm::mat4(1.0f), // transform
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(0.0, 0.0f, 0.0f), // cardinal position
-		basicVertexPositions,
+		basicShader.vertexPositions,
 		0.25f, // constant attenuation
 		0.01f, // linear attenuation
 		0.001f // quadratic attenuation
@@ -875,7 +718,6 @@ int main(int argc, char** argv)
 
 	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
 	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(1.0f, 1.0f, 1.0f));
-
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
@@ -935,7 +777,6 @@ int main(int argc, char** argv)
 			Input.old_mouseX = Input.current_mouseX; // set old mouse x to compare in next frame
 			Input.old_mouseY = Input.current_mouseY; // set old mouse y to compare in next frame
 
-
 			if (Input.LEFT_MOUSEBUTTON_PRESSED && !Input.RIGHT_MOUSEBUTTON_PRESSED) { // while LMB mouse is held and RMB is not held
 
 				if (mouseDX < 0) {
@@ -978,7 +819,6 @@ int main(int argc, char** argv)
 			else {
 				mode = GL_FILL;
 			}
-
 			if (backFaceCullingMode) {
 				glEnable(GL_CULL_FACE);
 			}
@@ -987,21 +827,21 @@ int main(int argc, char** argv)
 			}
 			glPolygonMode(GL_FRONT_AND_BACK, mode);
 
-			glFrontFace(GL_CCW);		// Im Uhrzeigersinn (clockwise)
+			glFrontFace(GL_CCW);		// counter clockwise
 
 			/////DRAW cuboid1 with phong shader
-			glUseProgram(phongShaderProgram); // Load the shader into the rendering pipeline 
+			glUseProgram(phongShader.program); // Load the shader into the rendering pipeline 
 
-			glUniformMatrix4fv(phongView, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(phongProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(phongModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+			glUniformMatrix4fv(phongShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(phongShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
-			glUniform3f(phongViewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
+			glUniform3f(phongShader.viewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
 
 			glBindVertexArray(cuboid.Vao); //  bind cuboid VAO
 
-			glUniformMatrix4fv(phongModel, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
-			glUniform3f(phongMaterialColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
+			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(cuboid.transform)); // push cuboid transform to shader
+			glUniform3f(phongShader.materialColor, cuboid.material.baseColor.r, cuboid.material.baseColor.g, cuboid.material.baseColor.b); // push color to shader
 
 			glm::vec3 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			float distance = sqrt(pow((cuboid.position.x - pointLightSource.position.x), 2) + pow((cuboid.position.y - pointLightSource.position.y), 2) + pow((cuboid.position.z - pointLightSource.position.z), 2));
@@ -1009,29 +849,28 @@ int main(int argc, char** argv)
 			float linear = pointLightSource.attenuation_Linear;
 			float quadratic = pointLightSource.attenuation_Quadratic;
 			glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(phongLightColor, intensity.x,intensity.y,intensity.z); // push color to shader
-			glUniform3f(phongLightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
-			glUniform1f(phong_k_ambient, cuboid.material.k_ambient);
-			glUniform1f(phong_k_diffuse, cuboid.material.k_diffuse);
-			glUniform1f(phong_k_specular, cuboid.material.k_specular);
+			glUniform3f(phongShader.lightColor, intensity.x,intensity.y,intensity.z); // push color to shader
+			glUniform3f(phongShader.lightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
+			glUniform1f(phongShader.k_ambient, cuboid.material.k_ambient);
+			glUniform1f(phongShader.k_diffuse, cuboid.material.k_diffuse);
+			glUniform1f(phongShader.k_specular, cuboid.material.k_specular);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
 
+			/////DRAW cylinder1 with phong shader
+			glUseProgram(phongShader.program); // Load the shader into the rendering pipeline 
 
-			//////////////////////////draw cylinder 1 with phong shader
-			glUseProgram(phongShaderProgram); // Load the shader into the rendering pipeline 
+			glUniformMatrix4fv(phongShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(phongShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
-			glUniformMatrix4fv(phongView, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(phongProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(phongModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
-
-			glUniform3f(phongViewPosition,mainCamera.cameraPosition.x,mainCamera.cameraPosition.y,mainCamera.cameraPosition.z); // push color to shader
+			glUniform3f(phongShader.viewPosition, mainCamera.cameraPosition.x, mainCamera.cameraPosition.y, mainCamera.cameraPosition.z); // push color to shader
 
 			glBindVertexArray(cylinder.Vao); //  bind cuboid VAO
 
-			glUniformMatrix4fv(phongModel, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cuboid transform to shader
-			glUniform3f(phongMaterialColor, cylinder.material.baseColor.r, cylinder.material.baseColor.g, cylinder.material.baseColor.b); // push color to shader
+			glUniformMatrix4fv(phongShader.model, 1, GL_FALSE, glm::value_ptr(cylinder.transform)); // push cuboid transform to shader
+			glUniform3f(phongShader.materialColor, cylinder.material.baseColor.r, cylinder.material.baseColor.g, cylinder.material.baseColor.b); // push color to shader
 
 			energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			 distance = sqrt(pow((cylinder.position.x - pointLightSource.position.x), 2) + pow((cylinder.position.y - pointLightSource.position.y), 2) + pow((cylinder.position.z - pointLightSource.position.z), 2));
@@ -1039,28 +878,28 @@ int main(int argc, char** argv)
 			 linear = pointLightSource.attenuation_Linear;
 			 quadratic = pointLightSource.attenuation_Quadratic;
 			intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(phongLightColor, intensity.x,intensity.y,intensity.z); // push color to shader
-			glUniform3f(phongLightPosition, pointLightSource.position.x,pointLightSource.position.y,pointLightSource.position.z); // push color to shader
-			glUniform1f(phong_k_ambient, cylinder.material.k_ambient);
-			glUniform1f(phong_k_diffuse, cylinder.material.k_diffuse);
-			glUniform1f(phong_k_specular, cylinder.material.k_specular);
+			glUniform3f(phongShader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+			glUniform3f(phongShader.lightPosition, pointLightSource.position.x, pointLightSource.position.y, pointLightSource.position.z); // push color to shader
+			glUniform1f(phongShader.k_ambient, cylinder.material.k_ambient);
+			glUniform1f(phongShader.k_diffuse, cylinder.material.k_diffuse);
+			glUniform1f(phongShader.k_specular, cylinder.material.k_specular);
 
 			glDrawArrays(GL_TRIANGLES, 0, cylinder.mesh.data.size());
 			glBindVertexArray(0); // unbind VAO
 			
 			////////////draw cuboid2 with gourad shader
-			glUseProgram(gouradShaderProgram); // Load the shader into the rendering pipeline 
+			glUseProgram(gouradShader.program); // Load the shader into the rendering pipeline 
 
-			glUniformMatrix4fv(gouradView, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(gouradProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(gouradModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+			glUniformMatrix4fv(gouradShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(gouradShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(gouradShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
-			glUniform3f(gouradViewPosition, mainCamera.cameraPosition.x, mainCamera.cameraPosition.y, mainCamera.cameraPosition.z); // push color to shader
+			glUniform3f(gouradShader.viewPosition, mainCamera.cameraPosition.x, mainCamera.cameraPosition.y, mainCamera.cameraPosition.z); // push color to shader
 
 			glBindVertexArray(cuboid2.Vao); //  bind cuboid VAO
 
-			glUniformMatrix4fv(gouradModel, 1, GL_FALSE, glm::value_ptr(cuboid2.transform)); // push cuboid transform to shader
-			glUniform3f(gouradMaterialColor, cuboid2.material.baseColor.r, cuboid2.material.baseColor.g, cuboid2.material.baseColor.b); // push color to shader
+			glUniformMatrix4fv(gouradShader.model, 1, GL_FALSE, glm::value_ptr(cuboid2.transform)); // push cuboid transform to shader
+			glUniform3f(gouradShader.materialColor, cuboid2.material.baseColor.r, cuboid2.material.baseColor.g, cuboid2.material.baseColor.b); // push color to shader
 
 			 energy = glm::vec3(pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z);
 			 distance = sqrt(pow((cuboid2.position.x - pointLightSource.position.x), 2) + pow((cuboid2.position.y - pointLightSource.position.y), 2) + pow((cuboid2.position.z - pointLightSource.position.z), 2));
@@ -1068,26 +907,26 @@ int main(int argc, char** argv)
 			 linear = pointLightSource.attenuation_Linear;
 			 quadratic = pointLightSource.attenuation_Quadratic;
 			intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-			glUniform3f(gouradLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-			glUniform3f(gouradLightPosition, pointLightSource.position.x, pointLightSource.position.y, pointLightSource.position.z); // push color to shader
-			glUniform1f(gourad_k_ambient, cuboid2.material.k_ambient);
-			glUniform1f(gourad_k_diffuse, cuboid2.material.k_diffuse);
-			glUniform1f(gourad_k_specular, cuboid2.material.k_specular);
+			glUniform3f(gouradShader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+			glUniform3f(gouradShader.lightPosition, pointLightSource.position.x, pointLightSource.position.y, pointLightSource.position.z); // push color to shader
+			glUniform1f(gouradShader.k_ambient, cuboid2.material.k_ambient);
+			glUniform1f(gouradShader.k_diffuse, cuboid2.material.k_diffuse);
+			glUniform1f(gouradShader.k_specular, cuboid2.material.k_specular);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
 			
 
 			//////// draw light source with basic shader
-			glUseProgram(basicShaderProgram); // Load the shader into the rendering pipeline 
+			glUseProgram(basicShader.program); // Load the shader into the rendering pipeline 
 
-			glUniformMatrix4fv(basicView, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
-			glUniformMatrix4fv(basicProj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
-			glUniformMatrix4fv(basicModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
+			glUniformMatrix4fv(basicShader.view, 1, GL_FALSE, glm::value_ptr(viewMatrix)); // push view matrix to shader
+			glUniformMatrix4fv(basicShader.proj, 1, GL_FALSE, glm::value_ptr(mainCamera.projectionMatrix)); // push projection matrix to shader
+			glUniformMatrix4fv(basicShader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
 			glBindVertexArray(pointLightSource.Vao);
-			glUniformMatrix4fv(basicModel, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
-			glUniform4f(basicColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
+			glUniformMatrix4fv(basicShader.model, 1, GL_FALSE, glm::value_ptr(pointLightSource.transform)); // push cylinder transform to shader
+			glUniform4f(basicShader.lightColor, pointLightSource.color.x, pointLightSource.color.y, pointLightSource.color.z, 1.0); // push color to shader
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0); // unbind VAO
 			/////
@@ -1099,25 +938,10 @@ int main(int argc, char** argv)
 	/* Free Resources */
 	glUseProgram(0);
 	glBindVertexArray(0);
-	glDetachShader(phongShaderProgram, phongVertexShader);
-	glDetachShader(phongShaderProgram, phongFragmentShader);
-	glDeleteProgram(phongShaderProgram);
-	glDeleteShader(phongVertexShader);
-	glDeleteShader(phongFragmentShader);
+	glDeleteProgram(phongShader.program);
+	glDeleteProgram(gouradShader.program);
 
-	glBindVertexArray(0);
-	glDetachShader(gouradShaderProgram, gouradVertexShader);
-	glDetachShader(gouradShaderProgram, gouradFragmentShader);
-	glDeleteProgram(gouradShaderProgram);
-	glDeleteShader(gouradVertexShader);
-	glDeleteShader(gouradFragmentShader);
-
-
-	glDetachShader(basicShaderProgram, basicVertexShader);
-	glDetachShader(basicShaderProgram, basicFragmentShader);
-	glDeleteProgram(basicShaderProgram);
-	glDeleteShader(basicVertexShader);
-	glDeleteShader(basicFragmentShader);
+	glDeleteProgram(basicShader.program);
 
 	glDeleteBuffers(1, &cuboid.Vbo);
 	glDeleteBuffers(1, &cuboid.Ebo);
@@ -1140,7 +964,6 @@ int main(int argc, char** argv)
 
 void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 {
-
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		Input.LEFT_MOUSEBUTTON_PRESSED = true;
@@ -1185,43 +1008,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
-
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
 		Input.UP_KEY_PRESSED = TRUE;
 	}
-
 	if (key == GLFW_KEY_UP && action == GLFW_RELEASE) {
 		Input.UP_KEY_PRESSED = FALSE;
 	}
-
 	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
 		Input.DOWN_KEY_PRESSED = TRUE;
 	}
-
 	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE) {
 		Input.DOWN_KEY_PRESSED = FALSE;
 	}
-
 	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
 		Input.LEFT_KEY_PRESSED = TRUE;
 	}
-
 	if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) {
 		Input.LEFT_KEY_PRESSED = FALSE;
 	}
-
 	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
 		Input.RIGHT_KEY_PRESSED = TRUE;
 	}
-
 	if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) {
 		Input.RIGHT_KEY_PRESSED = FALSE;
 	}
-
 	if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
 		wireframeMode = !wireframeMode;
 	}
-
 	if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
 
 		backFaceCullingMode = !backFaceCullingMode;
