@@ -39,14 +39,14 @@ public:
 	float k_diffuse;
 	float k_specular;
 	Material();
-	Material(float, float, float,float,float,float);
+	Material(float, float, float, float, float, float);
 };
 
 Material::Material() {
 
 }
 
-Material::Material(float r, float g, float b,float ka, float kd, float ks) {
+Material::Material(float r, float g, float b, float ka, float kd, float ks) {
 	baseColor.x = r;
 	baseColor.y = g;
 	baseColor.z = b;
@@ -114,7 +114,7 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	PointLightSource();
-	PointLightSource(glm::mat4,glm::vec3,glm::vec3, GLint,float,float,float);
+	PointLightSource(glm::mat4, glm::vec3, glm::vec3, GLint, float, float, float);
 	glm::vec3 color;
 	glm::vec3 position;
 	float attenuation_Constant;
@@ -126,7 +126,7 @@ PointLightSource::PointLightSource() {
 
 }
 
-PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::vec3 _position, GLint vertexPositions,float _attenuation_Constant, float _attenuation_Linear, float _attenuation_Quadratic ) {
+PointLightSource::PointLightSource(glm::mat4 transform, glm::vec3 _color, glm::vec3 _position, GLint vertexPositions, float _attenuation_Constant, float _attenuation_Linear, float _attenuation_Quadratic) {
 	color = _color;
 	position = _position;
 	attenuation_Constant = _attenuation_Constant;
@@ -143,8 +143,26 @@ PointLightSource::PointLightSource(glm::mat4 transform,glm::vec3 _color, glm::ve
 	glEnableVertexAttribArray(0);
 }
 
+//start
+class DirectionalLightSource {
+public:
+	glm::mat4 transform;
+	glm::vec3 color;
+	glm::vec3 direction;
+	DirectionalLightSource();
+	DirectionalLightSource(glm::mat4, glm::vec3, glm::vec3);
+};
 
+DirectionalLightSource::DirectionalLightSource() {
 
+}
+
+DirectionalLightSource::DirectionalLightSource(glm::mat4 transform, glm::vec3 _color, glm::vec3 _direction) {
+	color = _color;
+	direction = _direction;
+}
+
+//end
 class SphereMesh {
 public:
 	std::vector<float> data; // dynamic vertices array
@@ -158,9 +176,8 @@ SphereMesh::SphereMesh() { // default constructor
 
 SphereMesh::SphereMesh(float radius) {
 
-	int segments = 20;
+	int segments = 128;
 	std::vector<glm::vec3> sphereVertices;
-
 
 	for (unsigned int i = 1; i < segments; i++) {
 		float verticalAngle = float(i) * glm::pi<float>() / float(segments);
@@ -174,9 +191,9 @@ SphereMesh::SphereMesh(float radius) {
 			sphereVertices.push_back(position);
 		}
 	}
-		
-		// mid top segments
-		for (int i = 0; i < segments; i++) {
+
+	// mid top segments
+	for (int i = 0; i < segments; i++) {
 		glm::vec3 midPointTop = glm::vec3(0.0f, 1.0 * radius, 0.0f);
 
 		glm::vec3 v0 = midPointTop;
@@ -209,46 +226,46 @@ SphereMesh::SphereMesh(float radius) {
 		data.push_back(surfaceNormal.y); //ny
 		data.push_back(surfaceNormal.z); //nz
 
-		}
-	
-		//mid bottom segments
-		for (int i = 0; i < segments; i++) {
-			glm::vec3 midPointBottom = glm::vec3(0.0f, -1.0 * radius, 0.0f);
+	}
 
-			glm::vec3 v0 = midPointBottom;
-			glm::vec3 v1(sphereVertices[i].x, -1.0f * sphereVertices[i].y, sphereVertices[i].z);
-			glm::vec3 v2(sphereVertices[i == segments - 1 ? 0 : i + 1].x, -1.0f * sphereVertices[ i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
+	//mid bottom segments
+	for (int i = 0; i < segments; i++) {
+		glm::vec3 midPointBottom = glm::vec3(0.0f, -1.0 * radius, 0.0f);
 
-			glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
-			//triangle 1
-			data.push_back(v0.x); //vx
-			data.push_back(v0.y); //vy
-			data.push_back(v0.z); //vz
+		glm::vec3 v0 = midPointBottom;
+		glm::vec3 v1(sphereVertices[i].x, -1.0f * sphereVertices[i].y, sphereVertices[i].z);
+		glm::vec3 v2(sphereVertices[i == segments - 1 ? 0 : i + 1].x, -1.0f * sphereVertices[i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
 
-			data.push_back(surfaceNormal.x); //nx
-			data.push_back(surfaceNormal.y); //ny
-			data.push_back(surfaceNormal.z); //nz
+		glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+		//triangle 1
+		data.push_back(v0.x); //vx
+		data.push_back(v0.y); //vy
+		data.push_back(v0.z); //vz
 
-			data.push_back(v1.x); //vx
-			data.push_back(v1.y); //vy
-			data.push_back(v1.z); //vz
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
 
-			data.push_back(surfaceNormal.x); //nx
-			data.push_back(surfaceNormal.y); //ny
-			data.push_back(surfaceNormal.z); //nz
+		data.push_back(v1.x); //vx
+		data.push_back(v1.y); //vy
+		data.push_back(v1.z); //vz
 
-			data.push_back(v2.x); //vx
-			data.push_back(v2.y); //vy
-			data.push_back(v2.z); //vz
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
 
-			data.push_back(surfaceNormal.x); //nx
-			data.push_back(surfaceNormal.y); //ny
-			data.push_back(surfaceNormal.z); //nz
+		data.push_back(v2.x); //vx
+		data.push_back(v2.y); //vy
+		data.push_back(v2.z); //vz
 
-		}
-	
-		// rest of segments
-		for (int j = 0; j < sphereVertices.size() - segments; j+=segments) {
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
+
+	}
+
+	// rest of segments
+	for (int j = 0; j < sphereVertices.size() - segments; j += segments) {
 		glm::vec3 v0, v1, v2, v3, v4, v5;
 		for (int i = 0; i < segments; i++) {
 
@@ -378,9 +395,6 @@ SphereMesh::SphereMesh(float radius) {
 
 }
 
-	
-
-
 class Sphere {
 public:
 	SphereMesh mesh; // mesh of the cylinder
@@ -390,7 +404,7 @@ public:
 	GLuint Ebo; // element buffer object
 	Material material;
 	glm::vec3 position;
-	Sphere::Sphere(glm::mat4 transform, float radius,   GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+	Sphere::Sphere(glm::mat4 transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
 };
 
 Sphere::Sphere(glm::mat4 _transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
@@ -416,9 +430,6 @@ Sphere::Sphere(glm::mat4 _transform, float radius, GLint vertexPositions, GLint 
 
 
 }
-
-
-/// 
 
 class CylinderMesh {
 public:
@@ -447,92 +458,92 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 
 	// construct top and bottom circles
 
-		for (int i = 0; i < segments; i++) {
+	for (int i = 0; i < segments; i++) {
 
-			glm::vec3 midPoint = glm::vec3(0.0f, 1.0f * 0.5f * height, 0.0f);
+		glm::vec3 midPoint = glm::vec3(0.0f, 1.0f * 0.5f * height, 0.0f);
 
-			//mid point
-			data.push_back(midPoint.x); //vx
-			data.push_back(midPoint.y); //vy
-			data.push_back(midPoint.z); //vz
+		//mid point
+		data.push_back(midPoint.x); //vx
+		data.push_back(midPoint.y); //vy
+		data.push_back(midPoint.z); //vz
 
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
-
-
-			// first circle vertex
-			if (i != segments - 1) {
-				data.push_back(circleVertices[i + 1].x); //vx
-				data.push_back(1.0f * circleVertices[i + 1].y); //vy
-				data.push_back(circleVertices[i + 1].z); //vz
-
-			}
-			else {
-				data.push_back(circleVertices[0].x);//vx
-				data.push_back(1.0f * circleVertices[0].y); //vy
-				data.push_back(circleVertices[0].z); //vz
-			}
-
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
+		data.push_back(0.0); //nx
+		data.push_back(1.0f); //ny
+		data.push_back(0.0); //nz
 
 
-			//second circle vertex
-			data.push_back(circleVertices[i].x);//vx
-			data.push_back(1.0f * circleVertices[i].y);//vy
-			data.push_back(circleVertices[i].z); //vz
-
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
+		// first circle vertex
+		if (i != segments - 1) {
+			data.push_back(circleVertices[i + 1].x); //vx
+			data.push_back(1.0f * circleVertices[i + 1].y); //vy
+			data.push_back(circleVertices[i + 1].z); //vz
 
 		}
+		else {
+			data.push_back(circleVertices[0].x);//vx
+			data.push_back(1.0f * circleVertices[0].y); //vy
+			data.push_back(circleVertices[0].z); //vz
+		}
 
-		for (int i = 0; i < segments; i++) {
-
-			glm::vec3 midPoint = glm::vec3(0.0f, -1.0f * 0.5f * height, 0.0f);
-
-			//mid point
-			data.push_back(midPoint.x); //vx
-			data.push_back(midPoint.y); //vy
-			data.push_back(midPoint.z); //vz
-
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
-
-						//second circle vertex
-			data.push_back(circleVertices[i].x);//vx
-			data.push_back(-1.0f * circleVertices[i].y);//vy
-			data.push_back(circleVertices[i].z); //vz
-
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
-
-			// first circle vertex
-			if (i != segments - 1) {
-				data.push_back(circleVertices[i + 1].x); //vx
-				data.push_back(-1.0f * circleVertices[i + 1].y); //vy
-				data.push_back(circleVertices[i + 1].z); //vz
-
-			}
-			else {
-				data.push_back(circleVertices[0].x);//vx
-				data.push_back(-1.0f * circleVertices[0].y); //vy
-				data.push_back(circleVertices[0].z); //vz
-			}
-
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
+		data.push_back(0.0); //nx
+		data.push_back(1.0f); //ny
+		data.push_back(0.0); //nz
 
 
+		//second circle vertex
+		data.push_back(circleVertices[i].x);//vx
+		data.push_back(1.0f * circleVertices[i].y);//vy
+		data.push_back(circleVertices[i].z); //vz
 
+		data.push_back(0.0); //nx
+		data.push_back(1.0f); //ny
+		data.push_back(0.0); //nz
+
+	}
+
+	for (int i = 0; i < segments; i++) {
+
+		glm::vec3 midPoint = glm::vec3(0.0f, -1.0f * 0.5f * height, 0.0f);
+
+		//mid point
+		data.push_back(midPoint.x); //vx
+		data.push_back(midPoint.y); //vy
+		data.push_back(midPoint.z); //vz
+
+		data.push_back(0.0); //nx
+		data.push_back(-1.0f); //ny
+		data.push_back(0.0); //nz
+
+					//second circle vertex
+		data.push_back(circleVertices[i].x);//vx
+		data.push_back(-1.0f * circleVertices[i].y);//vy
+		data.push_back(circleVertices[i].z); //vz
+
+		data.push_back(0.0); //nx
+		data.push_back(-1.0f); //ny
+		data.push_back(0.0); //nz
+
+		// first circle vertex
+		if (i != segments - 1) {
+			data.push_back(circleVertices[i + 1].x); //vx
+			data.push_back(-1.0f * circleVertices[i + 1].y); //vy
+			data.push_back(circleVertices[i + 1].z); //vz
 
 		}
+		else {
+			data.push_back(circleVertices[0].x);//vx
+			data.push_back(-1.0f * circleVertices[0].y); //vy
+			data.push_back(circleVertices[0].z); //vz
+		}
+
+		data.push_back(0.0); //nx
+		data.push_back(-1.0f); //ny
+		data.push_back(0.0); //nz
+
+
+
+
+	}
 
 
 	// 1 side face per segment, each face has 6 vertices
@@ -607,7 +618,7 @@ public:
 	GLuint Ebo; // element buffer object
 	Material material;
 	glm::vec3 position;
-	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments , GLint vertexPositions,GLint vertexNormals,float r,float g,float b,float ka, float kd ,float ks,glm::vec3 position); // cylinder constructor
+	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
 };
 
 Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
@@ -739,16 +750,16 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform,glm::vec3 position, float length, float width, float heíght,float r, float g, float b, GLint,GLint,float, float, float); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, glm::vec3 position, float length, float width, float heíght, float r, float g, float b, GLint, GLint, float, float, float); // constructor
 	Material material;
 };
 
-Cuboid::Cuboid(glm::mat4 _transform,glm::vec3 _position, float length, float width, float height,float r, float g, float b, GLint vertexPositions, GLint vertexNormals, float ka, float kd, float ks) {
+Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float width, float height, float r, float g, float b, GLint vertexPositions, GLint vertexNormals, float ka, float kd, float ks) {
 
 	position = _position;
 	transform = glm::translate(_transform, position);
 	mesh = CuboidMesh(length, height, width);
-	material = Material(r, g, b,ka,kd,ks);
+	material = Material(r, g, b, ka, kd, ks);
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 	glGenBuffers(1, &Vbo); // generate the VBO
@@ -796,18 +807,20 @@ public:
 	GLint proj;
 	GLint model;
 	GLint materialColor;
-	GLint lightColor;
-	GLint lightPosition;
+	GLint pointLightColor;
+	GLint pointLightPosition;
 	GLint viewPosition;
 	GLint k_ambient;
 	GLint k_diffuse;
 	GLint k_specular;
 	GLint vertexPositions;
 	GLint vertexNormals;
-	Shader::Shader(string relativePathVert,string relativePathFrag, string type);
+	GLint directionalLightColor;
+	GLint directionalLightDirection;
+	Shader::Shader(string relativePathVert, string relativePathFrag, string type);
 };
 
-Shader::Shader(string relativePathVert,string relativePathFrag,string type) {
+Shader::Shader(string relativePathVert, string relativePathFrag, string type) {
 	// Compile Vertex Shader 
 	const char* vertexSource; // create character list
 	GLuint vertexShader; // create vertex shader id
@@ -895,18 +908,23 @@ Shader::Shader(string relativePathVert,string relativePathFrag,string type) {
 	vertexPositions = glGetAttribLocation(program, "position"); // get attribute ID for vertex position
 
 	if (type == "phong" || "gourad") {
-	materialColor = glGetUniformLocation(program, "materialColor"); // get uniform ID for out-color vector
-	lightPosition = glGetUniformLocation(program, "lightPos"); // get uniform ID for 
-	viewPosition = glGetUniformLocation(program, "viewPos"); // get uniform ID for 
-	lightColor = glGetUniformLocation(program, "lightColor"); // get uniform ID for 
+		materialColor = glGetUniformLocation(program, "materialColor"); // get uniform ID for out-color vector
+		viewPosition = glGetUniformLocation(program, "viewPos"); // get uniform ID for 
 
-	k_ambient = glGetUniformLocation(program, "k_ambient"); // get uniform ID for 
-	k_diffuse = glGetUniformLocation(program, "k_diffuse"); // get uniform ID for 
-	k_specular = glGetUniformLocation(program, "k_specular"); // get uniform ID for 
-	vertexNormals = glGetAttribLocation(program, "normal"); // get attribute ID for vertex position
+		pointLightPosition = glGetUniformLocation(program, "pLightPosition"); // get uniform ID for 
+		pointLightColor = glGetUniformLocation(program, "pLightColor"); // get uniform ID for 
+
+		directionalLightColor = glGetUniformLocation(program, "dLightColor"); // get uniform ID for 
+		directionalLightDirection = glGetUniformLocation(program, "dLightDirection"); // get uniform ID for 
+
+		k_ambient = glGetUniformLocation(program, "k_ambient"); // get uniform ID for 
+		k_diffuse = glGetUniformLocation(program, "k_diffuse"); // get uniform ID for 
+		k_specular = glGetUniformLocation(program, "k_specular"); // get uniform ID for 
+
+		vertexNormals = glGetAttribLocation(program, "normal"); // get attribute ID for vertex position
 	}
 	if (type == "basic") {
-		lightColor = glGetUniformLocation(program, "color"); // get uniform ID for 
+		pointLightColor = glGetUniformLocation(program, "color"); // get uniform ID for 
 	}
 
 }
@@ -935,9 +953,13 @@ struct InputManager {
 	double current_mouseY = 0.0;
 	double old_mouseX = 0.0;
 	double old_mouseY = 0.0;
+	bool W_KEY_PRESSED = false;
+	bool A_KEY_PRESSED = false;
+	bool S_KEY_PRESSED = false;
+	bool D_KEY_PRESSED = false;
 };
 
-void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource pLightSource, DirectionalLightSource dLightSource) {
 	/////DRAW cuboid1 with phong shader
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
 
@@ -952,23 +974,26 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
-	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
-	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
-	float constant = lightSource.attenuation_Constant;
-	float linear = lightSource.attenuation_Linear;
-	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
+	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
+	float constant = pLightSource.attenuation_Constant;
+	float linear = pLightSource.attenuation_Linear;
+	float quadratic = pLightSource.attenuation_Quadratic;
 	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
+
+	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
+	glUniform3f(shader.directionalLightDirection, dLightSource.direction.x, dLightSource.direction.y, dLightSource.direction.z); // push color to shader
+
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
-
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0); // unbind VAO
 }
 
-void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource pLightSource, DirectionalLightSource dLightSource) {
 	/////DRAW cylinder1 with phong shader
 
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
@@ -984,14 +1009,18 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
-	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
-	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
-	float constant = lightSource.attenuation_Constant;
-	float linear = lightSource.attenuation_Linear;
-	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
+	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
+	float constant = pLightSource.attenuation_Constant;
+	float linear = pLightSource.attenuation_Linear;
+	float quadratic = pLightSource.attenuation_Quadratic;
 	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
+
+	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
+	glUniform3f(shader.directionalLightDirection, dLightSource.direction.x, dLightSource.direction.y, dLightSource.direction.z); // push color to shader
+
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
@@ -1001,7 +1030,7 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 
 }
 
-void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource lightSource) {
+void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera, PointLightSource pLightSource, DirectionalLightSource dLightSource) {
 	/////DRAW cylinder1 with phong shader
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
 
@@ -1016,14 +1045,18 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
-	glm::vec3 energy = glm::vec3(lightSource.color.x, lightSource.color.y, lightSource.color.z);
-	float distance = sqrt(pow((object.position.x - lightSource.position.x), 2) + pow((object.position.y - lightSource.position.y), 2) + pow((object.position.z - lightSource.position.z), 2));
-	float constant = lightSource.attenuation_Constant;
-	float linear = lightSource.attenuation_Linear;
-	float quadratic = lightSource.attenuation_Quadratic;
+	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
+	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
+	float constant = pLightSource.attenuation_Constant;
+	float linear = pLightSource.attenuation_Linear;
+	float quadratic = pLightSource.attenuation_Quadratic;
 	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.lightColor, intensity.x, intensity.y, intensity.z); // push color to shader
-	glUniform3f(shader.lightPosition, lightSource.position.x, lightSource.position.y, lightSource.position.z); // push color to shader
+	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
+
+	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
+	glUniform3f(shader.directionalLightDirection, dLightSource.direction.x, dLightSource.direction.y, dLightSource.direction.z); // push color to shader
+
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
@@ -1032,7 +1065,7 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glBindVertexArray(0); // unbind VAO
 }
 
-void RenderLightSource(PointLightSource lightSource, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera) {
+void RenderPointLightSource(PointLightSource pLightSource, Shader shader, glm::mat4 viewMatrix, OrbitalCamera camera) {
 	//////// draw light source with basic shader
 	glUseProgram(shader.program); // Load the shader into the rendering pipeline 
 
@@ -1040,9 +1073,9 @@ void RenderLightSource(PointLightSource lightSource, Shader shader, glm::mat4 vi
 	glUniformMatrix4fv(shader.proj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)); // push projection matrix to shader
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // push default model matrix to shader
 
-	glBindVertexArray(lightSource.Vao);
-	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(lightSource.transform)); // push cylinder transform to shader
-	glUniform4f(shader.lightColor, lightSource.color.x, lightSource.color.y, lightSource.color.z, 1.0); // push color to shader
+	glBindVertexArray(pLightSource.Vao);
+	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(pLightSource.transform)); // push cylinder transform to shader
+	glUniform4f(shader.pointLightColor, pLightSource.color.x, pLightSource.color.y, pLightSource.color.z, 1.0); // push color to shader
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0); // unbind VAO
 	/////
@@ -1123,21 +1156,21 @@ int main(int argc, char** argv)
 
 
 	//make shaders
-	 Shader phongShader("assets/PhongShader.vert","assets/PhongShader.frag","phong");
-	 Shader gouradShader("assets/GouradShader.vert", "assets/GouradShader.frag", "gourad");
-	 Shader basicShader("assets/BasicShader.vert", "assets/BasicShader.frag", "basic");
+	Shader phongShader("assets/PhongShader.vert", "assets/PhongShader.frag", "phong");
+	Shader gouradShader("assets/GouradShader.vert", "assets/GouradShader.frag", "gourad");
+	Shader basicShader("assets/BasicShader.vert", "assets/BasicShader.frag", "basic");
 
 	// instantiate objects
 
 	// cuboid definition generation
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		glm::vec3(4.0f,-3.5f,0.0f),
-		3.0f, // starting length
-		3.0f, // starting height
-		3.0f, // starting width
-		0.0f, // base color r
-		1.0f, // base color g
+		glm::vec3(-1.2f, -1.5f, 0.0f), // starting position
+		1.5f, // starting length
+		1.5f, // starting height
+		1.5f, // starting width
+		1.0f, // base color r
+		0.0f, // base color g
 		0.0f, // base color b
 		phongShader.vertexPositions, // attribute ID for vertex position
 		phongShader.vertexNormals,
@@ -1146,77 +1179,55 @@ int main(int argc, char** argv)
 		0.5f // ks
 	);
 
-	// cuboid definition generation
-	Cuboid cuboid2(
-		glm::mat4(1.0f), // starting transform
-		glm::vec3(-4.0f, -3.5f, 0.0f),
-	    3.0, // starting length
-		3.0, // starting height
-		3.0, // starting width
-		1.0f, // base color r
-		0.0f, // base color g
-		0.0f, // base color b
-		gouradShader.vertexPositions, // attribute ID for vertex position
-		gouradShader.vertexNormals,
-		0.01f, // ka 
-		0.5f, // kd
-		0.1f // ks
-	);
-
-
-	// Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
-
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		1.5, // starting radius
-		3.0, // starting length
-		64, // number of segments
+		1.0f, // starting radius
+		1.5f, // starting length
+		128, // number of segments
 		phongShader.vertexPositions, // attribute ID for vertex position
 		phongShader.vertexNormals,
 		0.0f, // r
-		0.0f, // g
-		1.0f, // b
-		0.05f, // ka 
-		0.8f, // kd
-		0.5f, // ks
-		glm::vec3(4.0f, 3.5f, 0.0f)
-		);
-
-	Cylinder cylinder2(
-		glm::mat4(1.0f), // starting transform
-		1.5, // starting radius
-		3.0, // starting length
-		64, // number of segments
-		gouradShader.vertexPositions, // attribute ID for vertex position
-		gouradShader.vertexNormals,
-		1.0f, // r
 		1.0f, // g
 		0.0f, // b
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f, // ks
-		glm::vec3(-4.0f, 3.5f, 0.0f)
+		glm::vec3(1.2f, -1.5f, 0.0f) //starting position
 	);
 
 
 	Sphere sphere(
 		glm::mat4(1.0f), // starting transform
-		3.0, // starting radius
+		1.0f, // starting radius
+		gouradShader.vertexPositions, // attribute ID for vertex position
+		gouradShader.vertexNormals,
+		0.0f, // r
+		1.0f, // g
+		0.0f, // b
+		0.1f, // ka 
+		0.9f, // kd
+		0.3f, // ks
+		glm::vec3(-1.2f, 1.0f, 0.0f) //starting position
+	);
+
+	Sphere sphere2(
+		glm::mat4(1.0f), // starting transform
+		1.0, // starting radius
 		gouradShader.vertexPositions, // attribute ID for vertex position
 		gouradShader.vertexNormals,
 		1.0f, // r
-		1.0f, // g
+		0.0f, // g
 		0.0f, // b
-		0.05f, // ka 
-		0.8f, // kd
-		0.5f, // ks
-		glm::vec3(0.0f, 0.0f, 0.0f)
+		0.1f, // ka 
+		0.9f, // kd
+		0.3f, // ks
+		glm::vec3(1.2f, 1.0f, 0.0f)
 	);
 
-		// Sphere::Sphere(glm::mat4 transform, float radius, float length, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
-		
-	//generate camera
-	glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // set the as background color
+	// Sphere::Sphere(glm::mat4 transform, float radius, float length, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+
+//generate camera
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -1234,13 +1245,19 @@ int main(int argc, char** argv)
 		glm::vec3(1.0f, 1.0f, 1.0f), //color
 		glm::vec3(0.0, 0.0f, 0.0f), // cardinal position
 		basicShader.vertexPositions,
-		0.25f, // constant attenuation
-		0.01f, // linear attenuation
-		0.001f // quadratic attenuation
+		1.0f, // constant attenuation
+		0.4f, // linear attenuation
+		0.1f // quadratic attenuation
 	);
 
 	pointLightSource.transform = glm::translate(pointLightSource.transform, pointLightSource.position);
 	pointLightSource.transform = glm::scale(pointLightSource.transform, glm::vec3(1.0f, 1.0f, 1.0f));
+
+	DirectionalLightSource directionalLightSource(
+		glm::mat4(1.0f), //transform
+		glm::vec3(0.8f, 0.8f, 0.8f), //color
+		glm::vec3(0.0f, -1.0f, -1.0f) //direction
+	);
 
 	glEnable(GL_DEPTH_TEST); // enable Z-Depth buffer system
 
@@ -1256,30 +1273,44 @@ int main(int argc, char** argv)
 		// handle inputs
 			glfwPollEvents(); // handle OS events
 
+			float pointLightMovementSpeed = 0.01f;
 			if (Input.UP_KEY_PRESSED && Input.LEFT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * 0.001f);
-				pointLightSource.position += Vector3.UP * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.UP * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.UP * pointLightMovementSpeed;
 			}
 			else if (Input.DOWN_KEY_PRESSED && Input.RIGHT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.DOWN * 0.001f);
-				pointLightSource.position += Vector3.DOWN * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.DOWN * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.DOWN * pointLightMovementSpeed;
 			}
 			else if (Input.RIGHT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.RIGHT * 0.001f);
-				pointLightSource.position += Vector3.RIGHT * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.RIGHT * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.RIGHT * pointLightMovementSpeed;
 			}
 			else if (Input.LEFT_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.LEFT * 0.001f);
-				pointLightSource.position += Vector3.LEFT * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.LEFT * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.LEFT * pointLightMovementSpeed;
 			}
-
 			else if (Input.UP_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.FORWARD * 0.001f);
-				pointLightSource.position += Vector3.FORWARD * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.FORWARD * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.FORWARD * pointLightMovementSpeed;
 			}
 			else if (Input.DOWN_KEY_PRESSED) {
-				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.BACK * 0.001f);
-				pointLightSource.position += Vector3.BACK * 0.001f;
+				pointLightSource.transform = glm::translate(pointLightSource.transform, Vector3.BACK * pointLightMovementSpeed);
+				pointLightSource.position += Vector3.BACK * pointLightMovementSpeed;
+			}
+
+			float directionalLightRotationSpeed = 0.01f;
+			if (Input.W_KEY_PRESSED) {
+				directionalLightSource.direction += glm::vec3(0.0f, directionalLightRotationSpeed, 0.0f);
+			}
+			if (Input.S_KEY_PRESSED) {
+				directionalLightSource.direction -= glm::vec3(0.0f, directionalLightRotationSpeed, 0.0f);
+			}
+			if (Input.A_KEY_PRESSED) {
+				directionalLightSource.direction += glm::vec3(directionalLightRotationSpeed, 0.0f, 0.0f);
+			}
+			if (Input.D_KEY_PRESSED) {
+				directionalLightSource.direction -= glm::vec3(directionalLightRotationSpeed, 0.0f, 0.0f);
 			}
 
 			if (Input.SCROLL_UP) {
@@ -1352,12 +1383,11 @@ int main(int argc, char** argv)
 
 			glFrontFace(GL_CCW);		// counter clockwise
 
-			RenderLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
-			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource);
-			RenderCuboid(cuboid2, gouradShader, viewMatrix, mainCamera, pointLightSource);
-			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource);
-			RenderCylinder(cylinder2, gouradShader, viewMatrix, mainCamera, pointLightSource);
-			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource);
+			//RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
+			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderSphere(sphere2, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 
 			glfwSwapBuffers(window); // swap buffer
 		}
@@ -1374,10 +1404,6 @@ int main(int argc, char** argv)
 	glDeleteBuffers(1, &cuboid.Vbo);
 	glDeleteBuffers(1, &cuboid.Ebo);
 	glDeleteVertexArrays(1, &cuboid.Vao);
-
-	glDeleteBuffers(1, &cuboid2.Vbo);
-	glDeleteBuffers(1, &cuboid2.Ebo);
-	glDeleteVertexArrays(1, &cuboid2.Vao);
 
 	glDeleteBuffers(1, &pointLightSource.Vbo);
 	glDeleteVertexArrays(1, &pointLightSource.Vao);
@@ -1464,8 +1490,31 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		wireframeMode = !wireframeMode;
 	}
 	if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
-
 		backFaceCullingMode = !backFaceCullingMode;
+	}
+	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+		Input.W_KEY_PRESSED = TRUE;
+	}
+	if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+		Input.W_KEY_PRESSED = FALSE;
+	}
+	if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+		Input.A_KEY_PRESSED = TRUE;
+	}
+	if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+		Input.A_KEY_PRESSED = FALSE;
+	}
+	if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+		Input.S_KEY_PRESSED = TRUE;
+	}
+	if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+		Input.S_KEY_PRESSED = FALSE;
+	}
+	if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+		Input.D_KEY_PRESSED = TRUE;
+	}
+	if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+		Input.D_KEY_PRESSED = FALSE;
 	}
 }
 
