@@ -178,87 +178,72 @@ SphereMesh::SphereMesh(float radius) {
 		// mid top segments
 		for (int i = 0; i < segments; i++) {
 		glm::vec3 midPointTop = glm::vec3(0.0f, 1.0 * radius, 0.0f);
-		glm::vec3 surfaceNormal;
 
-			//mid point
-			data.push_back(midPointTop.x); //vx
-			data.push_back(midPointTop.y); //vy
-			data.push_back(midPointTop.z); //vz
+		glm::vec3 v0 = midPointTop;
+		glm::vec3 v1(sphereVertices[i == segments - 1 ? 0 : i + 1].x, sphereVertices[i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v2(sphereVertices[i].x, sphereVertices[i].y, sphereVertices[i].z);
 
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
+		glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+		//triangle 1
+		data.push_back(v0.x); //vx
+		data.push_back(v0.y); //vy
+		data.push_back(v0.z); //vz
 
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
 
-			// first circle vertex
-			if (i != segments - 1) {
-				data.push_back(sphereVertices[i + 1].x); //vx
-				data.push_back(sphereVertices[i + 1].y); //vy
-				data.push_back(sphereVertices[i + 1].z); //vz
+		data.push_back(v1.x); //vx
+		data.push_back(v1.y); //vy
+		data.push_back(v1.z); //vz
 
-			}
-			else {
-				data.push_back(sphereVertices[0].x);//vx
-				data.push_back(sphereVertices[0].y); //vy
-				data.push_back(sphereVertices[0].z); //vz
-			}
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
 
+		data.push_back(v2.x); //vx
+		data.push_back(v2.y); //vy
+		data.push_back(v2.z); //vz
 
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
-
-			//second circle vertex
-			data.push_back(sphereVertices[i].x);//vx
-			data.push_back(sphereVertices[i].y);//vy
-			data.push_back(sphereVertices[i].z); //vz
-
-			data.push_back(0.0); //nx
-			data.push_back(1.0f); //ny
-			data.push_back(0.0); //nz
+		data.push_back(surfaceNormal.x); //nx
+		data.push_back(surfaceNormal.y); //ny
+		data.push_back(surfaceNormal.z); //nz
 
 		}
 	
 		//mid bottom segments
 		for (int i = 0; i < segments; i++) {
-			glm::vec3 midPointTop = glm::vec3(0.0f, -1.0 * radius, 0.0f);
+			glm::vec3 midPointBottom = glm::vec3(0.0f, -1.0 * radius, 0.0f);
 
-			//mid point
-			data.push_back(midPointTop.x); //vx
-			data.push_back(midPointTop.y); //vy
-			data.push_back(midPointTop.z); //vz
+			glm::vec3 v0 = midPointBottom;
+			glm::vec3 v1(sphereVertices[i].x, -1.0f * sphereVertices[i].y, sphereVertices[i].z);
+			glm::vec3 v2(sphereVertices[i == segments - 1 ? 0 : i + 1].x, -1.0f * sphereVertices[ i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
 
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
+			glm::vec3 surfaceNormal = CalculateSurfaceNormal(v0, v1, v2);
+			//triangle 1
+			data.push_back(v0.x); //vx
+			data.push_back(v0.y); //vy
+			data.push_back(v0.z); //vz
 
-			//second circle vertex
-			data.push_back(sphereVertices[i].x);//vx
-			data.push_back(-1.0 * sphereVertices[i].y);//vy
-			data.push_back(sphereVertices[i].z); //vz
+			data.push_back(surfaceNormal.x); //nx
+			data.push_back(surfaceNormal.y); //ny
+			data.push_back(surfaceNormal.z); //nz
 
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
+			data.push_back(v1.x); //vx
+			data.push_back(v1.y); //vy
+			data.push_back(v1.z); //vz
 
-			// first circle vertex
-			if (i != segments - 1) {
-				data.push_back(sphereVertices[i + 1].x); //vx
-				data.push_back(-1.0 * sphereVertices[i + 1].y); //vy
-				data.push_back(sphereVertices[i + 1].z); //vz
+			data.push_back(surfaceNormal.x); //nx
+			data.push_back(surfaceNormal.y); //ny
+			data.push_back(surfaceNormal.z); //nz
 
-			}
-			else {
-				data.push_back(sphereVertices[0].x);//vx
-				data.push_back(-1.0 * sphereVertices[0].y); //vy
-				data.push_back(sphereVertices[0].z); //vz
-			}
+			data.push_back(v2.x); //vx
+			data.push_back(v2.y); //vy
+			data.push_back(v2.z); //vz
 
-			data.push_back(0.0); //nx
-			data.push_back(-1.0f); //ny
-			data.push_back(0.0); //nz
-
-
+			data.push_back(surfaceNormal.x); //nx
+			data.push_back(surfaceNormal.y); //ny
+			data.push_back(surfaceNormal.z); //nz
 
 		}
 	
