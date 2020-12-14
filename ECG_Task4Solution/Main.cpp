@@ -158,7 +158,7 @@ SphereMesh::SphereMesh() { // default constructor
 
 SphereMesh::SphereMesh(float radius) {
 
-	int segments = 3;
+	int segments = 20;
 	std::vector<glm::vec3> sphereVertices;
 
 
