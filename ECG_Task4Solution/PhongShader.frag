@@ -19,6 +19,11 @@ uniform float k_ambient;
 uniform float k_diffuse;
 uniform float k_specular;
 
+uniform float k_constant;
+uniform float k_linear;
+uniform float k_quadratic;
+
+
 void main()
 {
     vec3 result;
@@ -38,10 +43,18 @@ void main()
     float specularStrength = 1.0;
     vec3 viewDir = normalize(viewPos-FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // last value is the material shinyness
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 10);
     vec3 specular = k_specular * specularStrength * spec * pLightColor; 
     
-     result = (ambient + diffuse + specular) * materialColor;
+    float distance    = length(pLightPosition - FragPos);
+    float attenuation = 1.0 / (k_constant + k_linear * distance + k_quadratic * (distance * distance)); 
+
+    ambient  *= attenuation; 
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    result = (ambient + diffuse + specular) * materialColor;
+
 
     //DIRECTIONAL LIGHT
     // ambient
@@ -56,7 +69,7 @@ void main()
     // specular
     viewDir = normalize(viewPos-FragPos);
     reflectDir = reflect(-lightDir, norm);  
-    spec = pow(max(dot(viewDir, reflectDir), 0.0), 256); // last value is the material shinyness
+    spec = pow(max(dot(viewDir, reflectDir), 0.0), 10);
     specular = k_specular * spec * dLightColor; 
 
     result += (ambient + diffuse + specular) * materialColor;

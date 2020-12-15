@@ -173,7 +173,7 @@ SphereMesh::SphereMesh() { // default constructor
 
 }
 
-SphereMesh::SphereMesh(float radius,float segments) {
+SphereMesh::SphereMesh(float radius, float segments) {
 
 	std::vector<glm::vec3> sphereVertices;
 
@@ -398,11 +398,11 @@ public:
 	GLuint Ebo; // element buffer object
 	Material material;
 	glm::vec3 position;
-	Sphere::Sphere(glm::mat4 transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position,int segments); // cylinder constructor
+	Sphere::Sphere(glm::mat4 transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments); // cylinder constructor
 };
 
 Sphere::Sphere(glm::mat4 _transform, float radius, GLint vertexPositions, GLint vertexNormals, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments) {
-	mesh = SphereMesh(radius,segments);
+	mesh = SphereMesh(radius, segments);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
 	transform = glm::translate(_transform, position);
@@ -809,7 +809,12 @@ public:
 	GLint vertexNormals;
 	GLint directionalLightColor;
 	GLint directionalLightDirection;
+	GLint k_constant;
+	GLint k_linear;
+	GLint k_quadratic;
 	Shader::Shader(string relativePathVert, string relativePathFrag, string type);
+
+
 };
 
 Shader::Shader(string relativePathVert, string relativePathFrag, string type) {
@@ -913,6 +918,10 @@ Shader::Shader(string relativePathVert, string relativePathFrag, string type) {
 		k_diffuse = glGetUniformLocation(program, "k_diffuse"); // get uniform ID for 
 		k_specular = glGetUniformLocation(program, "k_specular"); // get uniform ID for 
 
+		k_linear= glGetUniformLocation(program, "k_linear"); // get uniform ID for 
+		k_constant = glGetUniformLocation(program, "k_constant"); // get uniform ID for 
+		k_quadratic = glGetUniformLocation(program, "k_quadratic"); // get uniform ID for 
+
 		vertexNormals = glGetAttribLocation(program, "normal"); // get attribute ID for vertex position
 	}
 	if (type == "basic") {
@@ -966,13 +975,12 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
+	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
+	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
+	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
-	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
-	float constant = pLightSource.attenuation_Constant;
-	float linear = pLightSource.attenuation_Linear;
-	float quadratic = pLightSource.attenuation_Quadratic;
-	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+
+	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
 	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
 
 	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
@@ -1002,13 +1010,12 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
+	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
+	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
+	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
-	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
-	float constant = pLightSource.attenuation_Constant;
-	float linear = pLightSource.attenuation_Linear;
-	float quadratic = pLightSource.attenuation_Quadratic;
-	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+
+	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
 	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
 
 	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
@@ -1038,13 +1045,12 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniformMatrix4fv(shader.model, 1, GL_FALSE, glm::value_ptr(object.transform)); // push cuboid transform to shader
 	glUniform3f(shader.materialColor, object.material.baseColor.r, object.material.baseColor.g, object.material.baseColor.b); // push color to shader
 
+	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
+	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
+	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
-	float distance = sqrt(pow((object.position.x - pLightSource.position.x), 2) + pow((object.position.y - pLightSource.position.y), 2) + pow((object.position.z - pLightSource.position.z), 2));
-	float constant = pLightSource.attenuation_Constant;
-	float linear = pLightSource.attenuation_Linear;
-	float quadratic = pLightSource.attenuation_Quadratic;
-	glm::vec3 intensity = energy * (1.0f / ((quadratic * pow(distance, 2)) + (linear * distance) + constant));
-	glUniform3f(shader.pointLightColor, intensity.x, intensity.y, intensity.z); // push color to shader
+
+	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
 	glUniform3f(shader.pointLightPosition, pLightSource.position.x, pLightSource.position.y, pLightSource.position.z); // push color to shader
 
 	glUniform3f(shader.directionalLightColor, dLightSource.color.x, dLightSource.color.y, dLightSource.color.z); // push color to shader
