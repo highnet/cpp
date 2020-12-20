@@ -846,12 +846,14 @@ public:
 	GLint k_linear;
 	GLint k_quadratic;
 	GLint textureLocation;
-	Shader::Shader(string relativePathVert, string relativePathFrag, string type);
+	string type;
+	Shader::Shader(string relativePathVert, string relativePathFrag, string _type);
 
 
 };
 
-Shader::Shader(string relativePathVert, string relativePathFrag, string type) {
+Shader::Shader(string relativePathVert, string relativePathFrag, string _type) {
+	type = _type;
 	// Compile Vertex Shader 
 	const char* vertexSource; // create character list
 	GLuint vertexShader; // create vertex shader id
@@ -1024,10 +1026,13 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
 	
-	int unit = 0;
-	glUniform1i(shader.textureLocation, unit);
-	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(GL_TEXTURE_2D, object.texture.handle);
+	if (shader.type == "phong") {
+		int unit = 0;
+		glUniform1i(shader.textureLocation, unit);
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, object.texture.handle);
+	}
+
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0); // unbind VAO
