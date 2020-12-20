@@ -31,6 +31,31 @@ double DegreesToRadians(double degrees);
 
 #define M_PI std::acos(-1.0)
 
+class Texture {
+public:
+	GLuint handle;
+	Texture::Texture();
+};
+
+Texture::Texture() {
+	glGenTextures(1, &handle);
+	glBindTexture(GL_TEXTURE_2D, handle);
+	DDSImage img = loadDDS("assets/textures/wood_texture.dds");
+	glCompressedTexImage2D(
+		GL_TEXTURE_2D, 
+		0,
+		GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 
+		img.width,
+		img.height,
+		0, img.size, 
+		img.data
+	);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+}
+
 class Material {
 public:
 	glm::vec4 baseColor;
@@ -641,57 +666,55 @@ Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segment
 
 class CuboidMesh {
 public:
-	float data[216] = {
-		// v = [float,float,float (position)][float,float,float (normal)]
-		// f = [v,v,v,v,v,v] (CLOCKWISE ORDERING)
+	float data[288] = {
 
 		 ///f0///
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v0
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v1
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v2
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,// v3 
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,// v0
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 0.0f,0.0f, // v0
+		 0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,0.0f,// v1
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,1.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  1.0,1.0f,// v2
+		 -0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0f,1.0f,// v3 
+		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0,0.0f,// v0
 
 		 ///f1///
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v4
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v5
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v6
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v6
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v7
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,// v4
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f, 1.0f,0.0f,// v5
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  1.0f,1.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  1.0f,1.0f,// v6
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,1.0f,// v7
+		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
 
 		 ///f2///
-		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v1 
-		 0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f,// v4
-		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v7
-		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f,// v7
-		 0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,// v2
-		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f,// v1
+		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1 
+		 0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,0.0f, // v4
+		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
+		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
+		 0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,  0.0f,1.0f,// v2
+		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1
 
 		 ///f3///
-		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v5
-		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,// v0
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v3
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,// v3
-		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,// v6
-		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,// v5
+		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f, 0.0f,0.0f,// v5
+		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,0.0f,// v0
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,1.0f,// v3
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,1.0f,// v3
+		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,1.0f,// v6
+		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,0.0f,// v5
 
 		 ///f4///
-		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v6
-		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v3
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,// v2
-		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v7
-		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,0.0f,// v6
+		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,0.0f,// v3
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,1.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,  1.0f,1.0f,// v2
+		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,1.0f,// v7
+		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f, 0.0f,0.0f,// v6
 
 		 ///f5///
-		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v5
-		 0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v4
-		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v1
-		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v1
-		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,// v0
-		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,// v5
+		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f, 0.0f,0.0f,// v5
+		 0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  1.0f,0.0f,// v4
+		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
+		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
+		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  0.0f,1.0f,// v0
+		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  0.0f,0.0f,// v5
 	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
@@ -704,7 +727,7 @@ CuboidMesh::CuboidMesh() {
 CuboidMesh::CuboidMesh(float length, float width, float height) {
 
 	int counter = 0;
-	for (int i = 0; i < 216; i++) {
+	for (int i = 0; i < 288; i++) {
 		switch (counter)
 		{
 		case 0:
@@ -726,6 +749,12 @@ CuboidMesh::CuboidMesh(float length, float width, float height) {
 			counter++;
 			break;
 		case 5:
+			counter++;
+			break;
+		case 6:
+			counter++;
+			break;
+		case 7:
 			counter = 0;
 			break;
 		}
@@ -742,8 +771,9 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, glm::vec3 position, float length, float width, float heíght, float r, float g, float b, float, float, float); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, glm::vec3 position, float length, float width, float heÃ­ght, float r, float g, float b, float, float, float); // constructor
 	Material material;
+	Texture texture;
 };
 
 Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float width, float height, float r, float g, float b, float ka, float kd, float ks) {
@@ -752,19 +782,24 @@ Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float wi
 	transform = glm::translate(_transform, position);
 	mesh = CuboidMesh(length, height, width);
 	material = Material(r, g, b, ka, kd, ks);
+	texture = Texture();
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 	glGenBuffers(1, &Vbo); // generate the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
 	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh.data), mesh.data, GL_STATIC_DRAW); // buffer the vertex data
 
-	glEnableVertexAttribArray(0); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+	// position attribute
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	// color attribute
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	// texture coord attribute
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
-	glEnableVertexAttribArray(1); // set color attribute vertex layout 1/2
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // set color arritrube vertex layout 2/2
 
-	glEnableVertexAttribArray(0); // disable the VAO
 
 }
 
@@ -810,6 +845,7 @@ public:
 	GLint k_constant;
 	GLint k_linear;
 	GLint k_quadratic;
+	GLint textureLocation;
 	Shader::Shader(string relativePathVert, string relativePathFrag, string type);
 
 
@@ -922,6 +958,9 @@ Shader::Shader(string relativePathVert, string relativePathFrag, string type) {
 	if (type == "basic") {
 		pointLightColor = glGetUniformLocation(program, "color"); // get uniform ID for 
 	}
+	if (type == "phong") {
+		textureLocation = glGetUniformLocation(program,"colorTexture");
+	}
 
 }
 
@@ -984,6 +1023,11 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
+	
+	int unit = 0;
+	glUniform1i(shader.textureLocation, unit);
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, object.texture.handle);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0); // unbind VAO
@@ -1164,8 +1208,8 @@ int main(int argc, char** argv)
 		1.5f, // starting height
 		1.5f, // starting width
 		1.0f, // base color r
-		0.0f, // base color g
-		0.0f, // base color b
+		1.0f, // base color g
+		1.0f, // base color b
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f // ks
@@ -1371,9 +1415,8 @@ int main(int argc, char** argv)
 
 			//RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
-			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
-			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
-			RenderSphere(sphere2, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderCylinder(cylinder, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderSphere(sphere, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 
 			glfwSwapBuffers(window); // swap buffer
 		}
