@@ -35,12 +35,16 @@ class Texture {
 public:
 	GLuint handle;
 	Texture::Texture();
+	Texture::Texture(string relativeFilePath);
+};
+Texture::Texture() {
+
 };
 
-Texture::Texture() {
+Texture::Texture(string relativeFilePath) {
 	glGenTextures(1, &handle);
 	glBindTexture(GL_TEXTURE_2D, handle);
-	DDSImage img = loadDDS("assets/textures/wood_texture.dds");
+	DDSImage img = loadDDS(relativeFilePath.c_str());
 	glCompressedTexImage2D(
 		GL_TEXTURE_2D, 
 		0,
@@ -446,8 +450,6 @@ Sphere::Sphere(glm::mat4 _transform, float radius,  float r, float g, float b, f
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glEnableVertexAttribArray(0); // disable the VAO
-
-
 }
 
 class CylinderMesh {
@@ -486,10 +488,12 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(midPoint.y); //vy
 		data.push_back(midPoint.z); //vz
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(1.0f); //ny
-		data.push_back(0.0); //nz
+		data.push_back(0.0f); //nz
 
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
 
 		// first circle vertex
 		if (i != segments - 1) {
@@ -504,19 +508,25 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 			data.push_back(circleVertices[0].z); //vz
 		}
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(1.0f); //ny
-		data.push_back(0.0); //nz
+		data.push_back(0.0f); //nz
 
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
 
 		//second circle vertex
 		data.push_back(circleVertices[i].x);//vx
 		data.push_back(1.0f * circleVertices[i].y);//vy
 		data.push_back(circleVertices[i].z); //vz
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(1.0f); //ny
-		data.push_back(0.0); //nz
+		data.push_back(0.0f); //nz
+
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
+
 
 	}
 
@@ -529,18 +539,24 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(midPoint.y); //vy
 		data.push_back(midPoint.z); //vz
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(-1.0f); //ny
-		data.push_back(0.0); //nz
+		data.push_back(0.0f); //nz
 
-					//second circle vertex
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
+
+		//second circle vertex
 		data.push_back(circleVertices[i].x);//vx
 		data.push_back(-1.0f * circleVertices[i].y);//vy
 		data.push_back(circleVertices[i].z); //vz
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(-1.0f); //ny
-		data.push_back(0.0); //nz
+		data.push_back(0.0f); //nz
+
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
 
 		// first circle vertex
 		if (i != segments - 1) {
@@ -555,11 +571,13 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 			data.push_back(circleVertices[0].z); //vz
 		}
 
-		data.push_back(0.0); //nx
+		data.push_back(0.0f); //nx
 		data.push_back(-1.0f); //ny
-		data.push_back(0.0); //nz
-	}
+		data.push_back(0.0f); //nz
 
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
+	}
 
 	// 1 side face per segment, each face has 6 vertices
 	for (int i = 0; i < segments; i++) {
@@ -582,6 +600,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v0.y - midPoint.y); //ny
 		data.push_back(v0.z - midPoint.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(1.0f); //v
+
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
 		data.push_back(v1.z); //vz
@@ -590,6 +611,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v1.y - midPoint.y); //ny
 		data.push_back(v1.z - midPoint.z); //nz
 
+		data.push_back(1.0f); //u
+		data.push_back(0.0f); //v
+
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
 		data.push_back(v2.z); //vz
@@ -597,6 +621,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v2.x - midPoint.x); //nx
 		data.push_back(v2.y - -1 * midPoint.y); //ny
 		data.push_back(v2.z - midPoint.z); //nz
+
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
 
 		//triangle 2
 
@@ -608,6 +635,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v3.y - midPoint.y); //ny
 		data.push_back(v3.z - midPoint.z); //nz
 
+		data.push_back(1.0f); //u
+		data.push_back(0.0f); //v
+
 		data.push_back(v4.x); //vx
 		data.push_back(v4.y); //vy
 		data.push_back(v4.z); //vz
@@ -616,6 +646,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v4.y - -1 * midPoint.y); //ny
 		data.push_back(v4.z - midPoint.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(1.0f); //v
+
 		data.push_back(v5.x); //vx
 		data.push_back(v5.y); //vy
 		data.push_back(v5.z); //vz
@@ -623,6 +656,9 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v5.x - midPoint.x); //nx
 		data.push_back(v5.y - -1 * midPoint.y); //ny
 		data.push_back(v5.z - midPoint.z); //nz
+
+		data.push_back(1.0f); //u
+		data.push_back(1.0f); //v
 	}
 
 }
@@ -636,12 +672,14 @@ public:
 	GLuint Ebo; // element buffer object
 	Material material;
 	glm::vec3 position;
+	Texture texture;
 	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
 };
 
 Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
 	mesh = CylinderMesh(radius, length, segments);
 	material = Material(r, g, b, ka, kd, ks);
+	texture = Texture("assets/textures/tiles_diffuse.dds");
 	position = position;
 	transform = glm::translate(_transform, position);
 
@@ -652,15 +690,14 @@ Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segment
 	glBindBuffer(GL_ARRAY_BUFFER, Vbo); // bind the VBO
 	glBufferData(GL_ARRAY_BUFFER, mesh.data.size() * sizeof(float), &mesh.data[0], GL_STATIC_DRAW);
 
-
 	glEnableVertexAttribArray(0); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); // set vertex layout 2/2
 
 	glEnableVertexAttribArray(1); // set color attribute vertex layout 1/2
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 
-
-	glEnableVertexAttribArray(0); // disable the VAO
+	glEnableVertexAttribArray(2); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
 }
 
@@ -782,7 +819,7 @@ Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float wi
 	transform = glm::translate(_transform, position);
 	mesh = CuboidMesh(length, height, width);
 	material = Material(r, g, b, ka, kd, ks);
-	texture = Texture();
+	texture = Texture("assets/textures/wood_texture.dds");
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
 	glGenBuffers(1, &Vbo); // generate the VBO
@@ -798,9 +835,6 @@ Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float wi
 	// texture coord attribute
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-
-
-
 }
 
 class OrbitalCamera {
@@ -1104,6 +1138,14 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
 
+	if (shader.type == "phong") {
+		int unit = 0;
+		glUniform1i(shader.textureLocation, unit);
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, object.texture.handle);
+	}
+
+
 	glDrawArrays(GL_TRIANGLES, 0, object.mesh.data.size());
 	glBindVertexArray(0); // unbind VAO
 }
@@ -1211,7 +1253,7 @@ int main(int argc, char** argv)
 		glm::vec3(-1.2f, -1.5f, 0.0f), // starting position
 		1.5f, // starting length
 		1.5f, // starting height
-		1.5f, // starting width
+		0.3f, // starting width
 		1.0f, // base color r
 		1.0f, // base color g
 		1.0f, // base color b
@@ -1224,10 +1266,10 @@ int main(int argc, char** argv)
 		glm::mat4(1.0f), // starting transform
 		1.0f, // starting radius
 		1.5f, // starting length
-		16, // number of segments
-		0.0f, // r
+		5, // number of segments
+		1.0f, // r
 		1.0f, // g
-		0.0f, // b
+		1.0f, // b
 		0.05f, // ka 
 		0.8f, // kd
 		0.5f, // ks
@@ -1259,6 +1301,20 @@ int main(int argc, char** argv)
 		0.3f, // ks
 		glm::vec3(1.2f, 1.0f, 0.0f), //starting position
 		32 //segments
+	);
+
+	Cuboid cuboid2(
+		glm::mat4(1.0f), // starting transform
+		glm::vec3(1.2f, 1.5f, 0.0f), // starting position
+		1.5f, // starting length
+		1.5f, // starting height
+		1.5f, // starting width
+		1.0f, // base color r
+		1.0f, // base color g
+		1.0f, // base color b
+		0.05f, // ka 
+		0.8f, // kd
+		0.5f // ks
 	);
 
 
@@ -1420,7 +1476,7 @@ int main(int argc, char** argv)
 
 			//RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
-			RenderCylinder(cylinder, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderSphere(sphere, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 
 			glfwSwapBuffers(window); // swap buffer
