@@ -5,6 +5,7 @@ out vec4 FragColor;
 
 in vec3 Normal;
 in vec3 FragPos;
+in vec2 Uv;
 
 uniform vec3 materialColor;
 uniform vec3 viewPos;
@@ -22,6 +23,8 @@ uniform float k_specular;
 uniform float k_constant;
 uniform float k_linear;
 uniform float k_quadratic;
+
+uniform sampler2D colorTexture;
 
 
 void main()
@@ -70,9 +73,10 @@ void main()
     viewDir = normalize(viewPos-FragPos);
     reflectDir = reflect(-lightDir, norm);  
     spec = pow(max(dot(viewDir, reflectDir), 0.0), 10);
-    specular = k_specular * spec * dLightColor; 
+    specular = k_specular * spec * dLightColor;
 
     result += (ambient + diffuse + specular) * materialColor;
 
-    FragColor = vec4(result, 1.0);
+    vec3 color = result * texture(colorTexture, Uv).rgb;
+    FragColor = vec4(color, 1.0);
 }
