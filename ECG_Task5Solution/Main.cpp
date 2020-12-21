@@ -46,16 +46,16 @@ Texture::Texture(string relativeFilePath) {
 	glBindTexture(GL_TEXTURE_2D, handle);
 	DDSImage img = loadDDS(relativeFilePath.c_str());
 	glCompressedTexImage2D(
-		GL_TEXTURE_2D, 
+		GL_TEXTURE_2D,
 		0,
-		GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 
+		GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
 		img.width,
 		img.height,
-		0, img.size, 
+		0, img.size,
 		img.data
 	);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 }
@@ -154,7 +154,7 @@ PointLightSource::PointLightSource() {
 
 }
 
-PointLightSource::PointLightSource(glm::mat4 transform, glm::vec3 _color, glm::vec3 _position,  float _attenuation_Constant, float _attenuation_Linear, float _attenuation_Quadratic) {
+PointLightSource::PointLightSource(glm::mat4 transform, glm::vec3 _color, glm::vec3 _position, float _attenuation_Constant, float _attenuation_Linear, float _attenuation_Quadratic) {
 	color = _color;
 	position = _position;
 	attenuation_Constant = _attenuation_Constant;
@@ -430,7 +430,7 @@ public:
 	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments); // cylinder constructor
 };
 
-Sphere::Sphere(glm::mat4 _transform, float radius,  float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments) {
+Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments) {
 	mesh = SphereMesh(radius, segments);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
@@ -465,7 +465,8 @@ CylinderMesh::CylinderMesh() { // default constructor
 
 CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 	float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
-	std::vector<glm::vec3> circleVertices;
+	std::vector<glm::vec3> radiusCircleVertices;
+
 
 	for (int i = 0; i < segments; i++) {
 		glm::vec3 circlePosition = glm::vec3(
@@ -474,13 +475,15 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 			sin(i * angleIncrement) * radius
 
 		);
-		circleVertices.push_back(circlePosition);
+		radiusCircleVertices.push_back(circlePosition);
 	}
 
 	// construct top and bottom circles
 
 	for (int i = 0; i < segments; i++) {
 
+		float u = 0.0f;
+		float v = 0.0f;
 		glm::vec3 midPoint = glm::vec3(0.0f, 1.0f * 0.5f * height, 0.0f);
 
 		//mid point
@@ -492,46 +495,52 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		u = 0.5f;
+		v = 0.5f;
+		data.push_back(0.5f); //u
+		data.push_back(0.5f); //v
 
 		// first circle vertex
 		if (i != segments - 1) {
-			data.push_back(circleVertices[i + 1].x); //vx
-			data.push_back(1.0f * circleVertices[i + 1].y); //vy
-			data.push_back(circleVertices[i + 1].z); //vz
+			data.push_back(radiusCircleVertices[i + 1].x); //vx
+			data.push_back(1.0f * radiusCircleVertices[i + 1].y); //vy
+			data.push_back(radiusCircleVertices[i + 1].z); //vz
 
 		}
 		else {
-			data.push_back(circleVertices[0].x);//vx
-			data.push_back(1.0f * circleVertices[0].y); //vy
-			data.push_back(circleVertices[0].z); //vz
+			data.push_back(radiusCircleVertices[0].x);//vx
+			data.push_back(1.0f * radiusCircleVertices[0].y); //vy
+			data.push_back(radiusCircleVertices[0].z); //vz
 		}
 
 		data.push_back(0.0f); //nx
 		data.push_back(1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		u = (1 + cos(angleIncrement * (i + 1))) / 2;
+		v = (1 + sin(angleIncrement * (i + 1))) / 2;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		//second circle vertex
-		data.push_back(circleVertices[i].x);//vx
-		data.push_back(1.0f * circleVertices[i].y);//vy
-		data.push_back(circleVertices[i].z); //vz
+		data.push_back(radiusCircleVertices[i].x);//vx
+		data.push_back(1.0f * radiusCircleVertices[i].y);//vy
+		data.push_back(radiusCircleVertices[i].z); //vz
 
 		data.push_back(0.0f); //nx
 		data.push_back(1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
-
-
+		u = (1 + cos(angleIncrement * i)) / 2;
+		v = (1 + sin(angleIncrement * i)) / 2;
+		data.push_back(u); //u
+		data.push_back(v); //v
 	}
 
 	for (int i = 0; i < segments; i++) {
 
+		float u = 0.0f;
+		float v = 0.0f;
 		glm::vec3 midPoint = glm::vec3(0.0f, -1.0f * 0.5f * height, 0.0f);
 
 		//mid point
@@ -543,52 +552,56 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(-1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		data.push_back(0.5f); //u
+		data.push_back(0.5f); //v
 
 		//second circle vertex
-		data.push_back(circleVertices[i].x);//vx
-		data.push_back(-1.0f * circleVertices[i].y);//vy
-		data.push_back(circleVertices[i].z); //vz
+		data.push_back(radiusCircleVertices[i].x);//vx
+		data.push_back(-1.0f * radiusCircleVertices[i].y);//vy
+		data.push_back(radiusCircleVertices[i].z); //vz
 
 		data.push_back(0.0f); //nx
 		data.push_back(-1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		u = (1 + cos(angleIncrement * (i))) / 2;
+		v = (1 + sin(angleIncrement * (i))) / 2;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		// first circle vertex
 		if (i != segments - 1) {
-			data.push_back(circleVertices[i + 1].x); //vx
-			data.push_back(-1.0f * circleVertices[i + 1].y); //vy
-			data.push_back(circleVertices[i + 1].z); //vz
+			data.push_back(radiusCircleVertices[i + 1].x); //vx
+			data.push_back(-1.0f * radiusCircleVertices[i + 1].y); //vy
+			data.push_back(radiusCircleVertices[i + 1].z); //vz
 
 		}
 		else {
-			data.push_back(circleVertices[0].x);//vx
-			data.push_back(-1.0f * circleVertices[0].y); //vy
-			data.push_back(circleVertices[0].z); //vz
+			data.push_back(radiusCircleVertices[0].x);//vx
+			data.push_back(-1.0f * radiusCircleVertices[0].y); //vy
+			data.push_back(radiusCircleVertices[0].z); //vz
 		}
 
 		data.push_back(0.0f); //nx
 		data.push_back(-1.0f); //ny
 		data.push_back(0.0f); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		u = (1 + cos(angleIncrement * (i + 1))) / 2;
+		v = (1 + sin(angleIncrement * (i + 1))) / 2;
+		data.push_back(u); //u
+		data.push_back(v); //v
 	}
 
 	// 1 side face per segment, each face has 6 vertices
 	for (int i = 0; i < segments; i++) {
 
-		glm::vec3 v0(circleVertices[i].x, circleVertices[i].y, circleVertices[i].z);
-		glm::vec3 v1(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
-		glm::vec3 v2(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
-		
-		glm::vec3 v3(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
-		glm::vec3 v4(circleVertices[i == segments - 1 ? 0 : i + 1].x, -1 * circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
-		glm::vec3 v5(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
+		glm::vec3 v0(radiusCircleVertices[i].x, radiusCircleVertices[i].y, radiusCircleVertices[i].z);
+		glm::vec3 v1(radiusCircleVertices[i == segments - 1 ? 0 : i + 1].x, radiusCircleVertices[i == segments - 1 ? 0 : i + 1].y, radiusCircleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v2(radiusCircleVertices[i].x, -1 * radiusCircleVertices[i].y, radiusCircleVertices[i].z);
+
+		glm::vec3 v3(radiusCircleVertices[i == segments - 1 ? 0 : i + 1].x, radiusCircleVertices[i == segments - 1 ? 0 : i + 1].y, radiusCircleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v4(radiusCircleVertices[i == segments - 1 ? 0 : i + 1].x, -1 * radiusCircleVertices[i == segments - 1 ? 0 : i + 1].y, radiusCircleVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v5(radiusCircleVertices[i].x, -1 * radiusCircleVertices[i].y, radiusCircleVertices[i].z);
 
 		glm::vec3 midPoint = glm::vec3(0.0f, 0.5f * height, 0.0f);
 
@@ -604,7 +617,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v0.y - midPoint.y); //ny
 		data.push_back(v0.z - midPoint.z); //nz
 
-		u = (i) / (float) segments;
+		u = (i) / (float)segments;
 		v = 1.0f;
 		data.push_back(u); //u
 		data.push_back(v); //v
@@ -617,7 +630,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v1.y - midPoint.y); //ny
 		data.push_back(v1.z - midPoint.z); //nz
 
-		u = (i + 1)  / (float)segments;
+		u = (i + 1) / (float)segments;
 		v = 1.0f;
 		data.push_back(u); //u
 		data.push_back(v); //v
@@ -646,7 +659,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v3.y - midPoint.y); //ny
 		data.push_back(v3.z - midPoint.z); //nz
 
-		u =  (i + 1)  / (float)segments;
+		u = (i + 1) / (float)segments;
 		v = 1.0f;
 		data.push_back(u); //u
 		data.push_back(v); //v
@@ -659,7 +672,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v4.y - -1 * midPoint.y); //ny
 		data.push_back(v4.z - midPoint.z); //nz
 
-		u =  (i + 1)  / (float)segments;
+		u = (i + 1) / (float)segments;
 		v = 0.0f;
 		data.push_back(u); //u
 		data.push_back(v); //v
@@ -672,7 +685,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v5.y - -1 * midPoint.y); //ny
 		data.push_back(v5.z - midPoint.z); //nz
 
-		u = ( i) / (float)segments;
+		u = (i) / (float)segments;
 		v = 0.0f;
 		data.push_back(u); //u
 		data.push_back(v); //v
@@ -722,53 +735,53 @@ class CuboidMesh {
 public:
 	float data[288] = {
 
-		 ///f0///
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 0.0f,0.0f, // v0
-		 0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,0.0f,// v1
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,1.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  1.0,1.0f,// v2
-		 -0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0f,1.0f,// v3 
-		 -0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0,0.0f,// v0
+		///f0///
+		-0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 0.0f,0.0f, // v0
+		0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,0.0f,// v1
+		0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f, 1.0f,1.0f,// v2
+		0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  1.0,1.0f,// v2
+		-0.5f,0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0f,1.0f,// v3 
+		-0.5f,-0.5f,0.5f, 0.0f,0.0f,1.0f,  0.0,0.0f,// v0
 
-		 ///f1///
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f, -1.0f,0.0f,// v5
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,-1.0f,// v7
-		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
+		///f1///
+		0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
+		-0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f, -1.0f,0.0f,// v5
+		-0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
+		-0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
+		0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,-1.0f,// v7
+		0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
 
-		 ///f2///
-		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1 
-		 0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,0.0f, // v4
-		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
-		 0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
-		 0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,  0.0f,1.0f,// v2
-		 0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1
+		///f2///
+		0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1 
+		0.5f,-0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,0.0f, // v4
+		0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
+		0.5f,0.5f,-0.5f, 1.0f,0.0f,0.0f, 1.0f,1.0f, // v7
+		0.5f,0.5f,0.5f, 1.0f,0.0f,0.0f,  0.0f,1.0f,// v2
+		0.5f,-0.5f,0.5f, 1.0f,0.0f,0.0f, 0.0f,0.0f, // v1
 
-		 ///f3///
-		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f, 0.0f,0.0f,// v5
-		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,0.0f,// v0
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,-1.0f,// v3
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f, - 1.0f,-1.0f,// v3
-		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,-1.0f,// v6
-		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,0.0f,// v5
+		///f3///
+		-0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f, 0.0f,0.0f,// v5
+		-0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,0.0f,// v0
+		-0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,-1.0f,// v3
+		-0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f, -1.0f,-1.0f,// v3
+		-0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,-1.0f,// v6
+		-0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,0.0f,// v5
 
-		 ///f4///
-		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,0.0f,// v6
-		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 0.0f,1.0f,// v3
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,0.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,  1.0f,0.0f,// v2
-		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  1.0f,1.0f,// v7
-		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f, 0.0f,0.0f,// v6
+		///f4///
+		-0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,0.0f,// v6
+		-0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 0.0f,1.0f,// v3
+		0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,0.0f,// v2
+		0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,  1.0f,0.0f,// v2
+		0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  1.0f,1.0f,// v7
+		-0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f, 0.0f,0.0f,// v6
 
-		 ///f5///
-		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f, 0.0f,0.0f,// v5
-		 0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  1.0f,0.0f,// v4
-		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
-		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
-		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  0.0f,-1.0f,// v0
-		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  0.0f,0.0f,// v5
+		///f5///
+		-0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f, 0.0f,0.0f,// v5
+		0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  1.0f,0.0f,// v4
+		0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
+		0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
+		-0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  0.0f,-1.0f,// v0
+		-0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  0.0f,0.0f,// v5
 	};
 	CuboidMesh(); // default constructor 
 	CuboidMesh(float length, float height, float width); // 
@@ -1003,7 +1016,7 @@ Shader::Shader(string relativePathVert, string relativePathFrag, string _type) {
 		k_diffuse = glGetUniformLocation(program, "k_diffuse"); // get uniform ID for 
 		k_specular = glGetUniformLocation(program, "k_specular"); // get uniform ID for 
 
-		k_linear= glGetUniformLocation(program, "k_linear"); // get uniform ID for 
+		k_linear = glGetUniformLocation(program, "k_linear"); // get uniform ID for 
 		k_constant = glGetUniformLocation(program, "k_constant"); // get uniform ID for 
 		k_quadratic = glGetUniformLocation(program, "k_quadratic"); // get uniform ID for 
 
@@ -1012,7 +1025,7 @@ Shader::Shader(string relativePathVert, string relativePathFrag, string _type) {
 		pointLightColor = glGetUniformLocation(program, "color"); // get uniform ID for 
 	}
 	if (type == "phong") {
-		textureLocation = glGetUniformLocation(program,"colorTexture");
+		textureLocation = glGetUniformLocation(program, "colorTexture");
 	}
 
 }
@@ -1076,7 +1089,7 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
-	
+
 	if (shader.type == "phong") {
 		int unit = 0;
 		glUniform1i(shader.textureLocation, unit);
@@ -1283,7 +1296,7 @@ int main(int argc, char** argv)
 		glm::mat4(1.0f), // starting transform
 		0.5f, // starting radius
 		1.5f, // starting length
-		16, // number of segments
+		32, // number of segments
 		1.0f, // r
 		1.0f, // g
 		1.0f, // b
@@ -1321,7 +1334,7 @@ int main(int argc, char** argv)
 	);
 
 
-//generate camera
+	//generate camera
 	glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
@@ -1745,4 +1758,3 @@ float Clamp(float value, float min, float max) {
 double DegreesToRadians(double degrees) {
 	return (degrees * PI) / 180;
 }
-
