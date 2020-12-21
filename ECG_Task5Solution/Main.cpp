@@ -464,7 +464,7 @@ CylinderMesh::CylinderMesh() { // default constructor
 }
 
 CylinderMesh::CylinderMesh(float radius, float height, int segments) {
-	const float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
+	float angleIncrement = (M_PI * 2.0f) / segments; // angle between each vertex of the cylinder
 	std::vector<glm::vec3> circleVertices;
 
 	for (int i = 0; i < segments; i++) {
@@ -585,11 +585,15 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		glm::vec3 v0(circleVertices[i].x, circleVertices[i].y, circleVertices[i].z);
 		glm::vec3 v1(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
 		glm::vec3 v2(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
+		
 		glm::vec3 v3(circleVertices[i == segments - 1 ? 0 : i + 1].x, circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
 		glm::vec3 v4(circleVertices[i == segments - 1 ? 0 : i + 1].x, -1 * circleVertices[i == segments - 1 ? 0 : i + 1].y, circleVertices[i == segments - 1 ? 0 : i + 1].z);
 		glm::vec3 v5(circleVertices[i].x, -1 * circleVertices[i].y, circleVertices[i].z);
 
 		glm::vec3 midPoint = glm::vec3(0.0f, 0.5f * height, 0.0f);
+
+		float u = 0.0f;
+		float v = 0.0f;
 
 		//triangle 1
 		data.push_back(v0.x); //vx
@@ -600,8 +604,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v0.y - midPoint.y); //ny
 		data.push_back(v0.z - midPoint.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(1.0f); //v
+		u = (i) / (float) segments;
+		v = 1.0f;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
@@ -611,8 +617,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v1.y - midPoint.y); //ny
 		data.push_back(v1.z - midPoint.z); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(0.0f); //v
+		u = (i + 1)  / (float)segments;
+		v = 1.0f;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
@@ -622,8 +630,11 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v2.y - -1 * midPoint.y); //ny
 		data.push_back(v2.z - midPoint.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		u = (i) / (float)segments;
+		v = 0.0f;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		//triangle 2
 
@@ -635,8 +646,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v3.y - midPoint.y); //ny
 		data.push_back(v3.z - midPoint.z); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(0.0f); //v
+		u =  (i + 1)  / (float)segments;
+		v = 1.0f;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v4.x); //vx
 		data.push_back(v4.y); //vy
@@ -646,8 +659,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v4.y - -1 * midPoint.y); //ny
 		data.push_back(v4.z - midPoint.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(1.0f); //v
+		u =  (i + 1)  / (float)segments;
+		v = 0.0f;
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v5.x); //vx
 		data.push_back(v5.y); //vy
@@ -657,8 +672,10 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(v5.y - -1 * midPoint.y); //ny
 		data.push_back(v5.z - midPoint.z); //nz
 
-		data.push_back(1.0f); //u
-		data.push_back(1.0f); //v
+		u = ( i) / (float)segments;
+		v = 0.0f;
+		data.push_back(u); //u
+		data.push_back(v); //v
 	}
 
 }
@@ -715,10 +732,10 @@ public:
 
 		 ///f1///
 		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
-		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f, 1.0f,0.0f,// v5
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  1.0f,1.0f,// v6
-		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  1.0f,1.0f,// v6
-		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,1.0f,// v7
+		 -0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f, -1.0f,0.0f,// v5
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
+		 -0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  -1.0f,-1.0f,// v6
+		 0.5f,0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,-1.0f,// v7
 		 0.5f,-0.5f,-0.5f, 0.0f,0.0f,-1.0f,  0.0f,0.0f,// v4
 
 		 ///f2///
@@ -731,18 +748,18 @@ public:
 
 		 ///f3///
 		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f, 0.0f,0.0f,// v5
-		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,0.0f,// v0
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,1.0f,// v3
-		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  1.0f,1.0f,// v3
-		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,1.0f,// v6
+		 -0.5f,-0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,0.0f,// v0
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f,  -1.0f,-1.0f,// v3
+		 -0.5f,0.5f,0.5f, -1.0f,0.0f,0.0f, - 1.0f,-1.0f,// v3
+		 -0.5f,0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,-1.0f,// v6
 		 -0.5f,-0.5f,-0.5f, -1.0f,0.0f,0.0f,  0.0f,0.0f,// v5
 
 		 ///f4///
 		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,0.0f,// v6
-		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,0.0f,// v3
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,1.0f,// v2
-		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,  1.0f,1.0f,// v2
-		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  0.0f,1.0f,// v7
+		 -0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 0.0f,1.0f,// v3
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f, 1.0f,0.0f,// v2
+		 0.5f,0.5f,0.5f, 0.0f,1.0f,0.0f,  1.0f,0.0f,// v2
+		 0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f,  1.0f,1.0f,// v7
 		 -0.5f,0.5f,-0.5f, 0.0f,1.0f,0.0f, 0.0f,0.0f,// v6
 
 		 ///f5///
@@ -750,7 +767,7 @@ public:
 		 0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  1.0f,0.0f,// v4
 		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
 		 0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  1.0f,1.0f,// v1
-		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  0.0f,1.0f,// v0
+		 -0.5f,-0.5f,0.5f, 0.0f,-1.0f,0.0f,  0.0f,-1.0f,// v0
 		 -0.5f,-0.5f,-0.5f, 0.0f,-1.0f,0.0f,  0.0f,0.0f,// v5
 	};
 	CuboidMesh(); // default constructor 
@@ -1253,7 +1270,7 @@ int main(int argc, char** argv)
 		glm::vec3(-1.2f, -1.5f, 0.0f), // starting position
 		1.5f, // starting length
 		1.5f, // starting height
-		0.3f, // starting width
+		1.5f, // starting width
 		1.0f, // base color r
 		1.0f, // base color g
 		1.0f, // base color b
@@ -1264,9 +1281,9 @@ int main(int argc, char** argv)
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		1.0f, // starting radius
+		0.5f, // starting radius
 		1.5f, // starting length
-		5, // number of segments
+		16, // number of segments
 		1.0f, // r
 		1.0f, // g
 		1.0f, // b
@@ -1303,23 +1320,9 @@ int main(int argc, char** argv)
 		32 //segments
 	);
 
-	Cuboid cuboid2(
-		glm::mat4(1.0f), // starting transform
-		glm::vec3(1.2f, 1.5f, 0.0f), // starting position
-		1.5f, // starting length
-		1.5f, // starting height
-		1.5f, // starting width
-		1.0f, // base color r
-		1.0f, // base color g
-		1.0f, // base color b
-		0.05f, // ka 
-		0.8f, // kd
-		0.5f // ks
-	);
-
 
 //generate camera
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set the as background color
+	glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
@@ -1474,7 +1477,7 @@ int main(int argc, char** argv)
 
 			glFrontFace(GL_CCW);		// counter clockwise
 
-			//RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
+			RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderSphere(sphere, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
