@@ -219,7 +219,7 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		}
 	}
 
-	// mid top segments
+	//  top segments
 	for (int i = 0; i < segments; i++) {
 		glm::vec3 midPointTop = glm::vec3(0.0f, 1.0 * radius, 0.0f);
 
@@ -236,6 +236,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v0.y); //ny
 		data.push_back(v0.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
+
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
 		data.push_back(v1.z); //vz
@@ -243,6 +246,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v1.x); //nx
 		data.push_back(v1.y); //ny
 		data.push_back(v1.z); //nz
+
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
 
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
@@ -252,9 +258,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v2.y); //ny
 		data.push_back(v2.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
+
 	}
 
-	//mid bottom segments
+	// bottom segments
 	for (int i = 0; i < segments; i++) {
 		glm::vec3 midPointBottom = glm::vec3(0.0f, -1.0 * radius, 0.0f);
 
@@ -271,6 +280,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v0.y); //ny
 		data.push_back(v0.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
+
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
 		data.push_back(v1.z); //vz
@@ -278,6 +290,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v1.x); //nx
 		data.push_back(v1.y); //ny
 		data.push_back(v1.z); //nz
+
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
 
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
@@ -287,22 +302,28 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v2.y); //ny
 		data.push_back(v2.z); //nz
 
+		data.push_back(0.0f); //u
+		data.push_back(0.0f); //v
+
 	}
 
-	// rest of segments
+	// side segments
 	for (int j = 0; j < sphereVertices.size() - segments; j += segments) {
+		
 		glm::vec3 v0, v1, v2, v3, v4, v5;
+		float u, v;
 		for (int i = 0; i < segments; i++) {
 
-			if (i < segments - 1) {
 				glm::vec3 v0(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v1(sphereVertices[segments + i + 1 + j].x, sphereVertices[segments + i + 1 + j].y, sphereVertices[segments + i + 1 + j].z);
+				glm::vec3 v1(sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].x, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].y, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].z);
 				glm::vec3 v2(sphereVertices[segments + i + j].x, sphereVertices[segments + i + j].y, sphereVertices[segments + i + j].z);
 
-				glm::vec3 v3(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
+				glm::vec3 v3(sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].x , sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].y, sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].z);
 				glm::vec3 v5(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v4(sphereVertices[segments + i + 1 + j].x, sphereVertices[segments + i + 1 + j].y, sphereVertices[segments + i + 1 + j].z);
-
+				glm::vec3 v4(sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].x, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].y, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].z);
+				
+				u = 0.0f;
+				v = 0.0f;
 				//triangle 1
 				data.push_back(v0.x); //vx
 				data.push_back(v0.y); //vy
@@ -312,6 +333,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v0.y); //ny
 				data.push_back(v0.z); //nz
 
+				data.push_back((i + 1) / (float)segments); //u
+				data.push_back((j) / (float)segments); //v
+
 				data.push_back(v1.x); //vx
 				data.push_back(v1.y); //vy
 				data.push_back(v1.z); //vz
@@ -320,6 +344,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v1.y); //ny
 				data.push_back(v1.z); //nz
 
+				data.push_back((i) / (float)segments); //u
+				data.push_back((j + 1) / (float)segments); //v
+
 				data.push_back(v2.x); //vx
 				data.push_back(v2.y); //vy
 				data.push_back(v2.z); //vz
@@ -327,6 +354,10 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v2.x); //nx
 				data.push_back(v2.y); //ny
 				data.push_back(v2.z); //nz
+
+				data.push_back((i + 1) / (float)segments); //u
+				data.push_back((j + 1) / (float)segments); //v
+
 
 				//triangle 2
 				data.push_back(v3.x); //vx
@@ -337,65 +368,8 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v3.y); //ny
 				data.push_back(v3.z); //nz
 
-				data.push_back(v4.x); //vx
-				data.push_back(v4.y); //vy
-				data.push_back(v4.z); //vz
-
-				data.push_back(v4.x); //nx
-				data.push_back(v4.y); //ny
-				data.push_back(v4.z); //nz
-
-				data.push_back(v5.x); //vx
-				data.push_back(v5.y); //vy
-				data.push_back(v5.z); //vz
-
-				data.push_back(v5.x); //nx
-				data.push_back(v5.y); //ny
-				data.push_back(v5.z); //nz
-
-			}
-			else {
-				glm::vec3 v0(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v1(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
-				glm::vec3 v2(sphereVertices[segments + i + j].x, sphereVertices[segments + i + j].y, sphereVertices[segments + i + j].z);
-
-				glm::vec3 v3(sphereVertices[i - segments + 1 + j].x, sphereVertices[i - segments + 1 + j].y, sphereVertices[i - segments + 1 + j].z);
-				glm::vec3 v5(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v4(sphereVertices[i + 1 + j].x, sphereVertices[i + 1 + j].y, sphereVertices[i + 1 + j].z);
-
-				//triangle 1
-				data.push_back(v0.x); //vx
-				data.push_back(v0.y); //vy
-				data.push_back(v0.z); //vz
-
-				data.push_back(v0.x); //nx
-				data.push_back(v0.y); //ny
-				data.push_back(v0.z); //nz
-
-				data.push_back(v1.x); //vx
-				data.push_back(v1.y); //vy
-				data.push_back(v1.z); //vz
-
-				data.push_back(v1.x); //nx
-				data.push_back(v1.y); //ny
-				data.push_back(v1.z); //nz
-
-				data.push_back(v2.x); //vx
-				data.push_back(v2.y); //vy
-				data.push_back(v2.z); //vz
-
-				data.push_back(v2.x); //nx
-				data.push_back(v2.y); //ny
-				data.push_back(v2.z); //nz
-
-				//triangle 2
-				data.push_back(v3.x); //vx
-				data.push_back(v3.y); //vy
-				data.push_back(v3.z); //vz
-
-				data.push_back(v3.x); //nx
-				data.push_back(v3.y); //ny
-				data.push_back(v3.z); //nz
+				data.push_back((i) / (float)segments); //u
+				data.push_back((j) / (float)segments); //v
 
 				data.push_back(v4.x); //vx
 				data.push_back(v4.y); //vy
@@ -405,6 +379,9 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v4.y); //ny
 				data.push_back(v4.z); //nz
 
+				data.push_back((i) / (float)segments); //u
+				data.push_back((j + 1) / (float)segments); //v
+
 				data.push_back(v5.x); //vx
 				data.push_back(v5.y); //vy
 				data.push_back(v5.z); //vz
@@ -412,7 +389,10 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v5.x); //nx
 				data.push_back(v5.y); //ny
 				data.push_back(v5.z); //nz
-			}
+
+				data.push_back((i + 1) / (float)segments); //u
+				data.push_back((j) / (float)segments); //v
+
 		}
 	}
 
@@ -426,6 +406,7 @@ public:
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
 	Material material;
+	Texture texture;
 	glm::vec3 position;
 	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments); // cylinder constructor
 };
@@ -434,6 +415,7 @@ Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, fl
 	mesh = SphereMesh(radius, segments);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
+	texture = Texture("assets/textures/tiles_diffuse.dds");
 	transform = glm::translate(_transform, position);
 
 	glGenVertexArrays(1, &Vao); // create the VAO
@@ -444,10 +426,13 @@ Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, fl
 	glBufferData(GL_ARRAY_BUFFER, mesh.data.size() * sizeof(float), &mesh.data[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0); // set position attribute vertex layout  1/2
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0); // set vertex layout 2/2
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); // set vertex layout 2/2
 
 	glEnableVertexAttribArray(1); // set color attribute vertex layout 1/2
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glEnableVertexAttribArray(2); // set color attribute vertex layout 1/2
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
 	glEnableVertexAttribArray(0); // disable the VAO
 }
@@ -591,6 +576,7 @@ CylinderMesh::CylinderMesh(float radius, float height, int segments) {
 		data.push_back(u); //u
 		data.push_back(v); //v
 	}
+
 
 	// 1 side face per segment, each face has 6 vertices
 	for (int i = 0; i < segments; i++) {
@@ -1133,6 +1119,14 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
 
+	if (shader.type == "phong") {
+		int unit = 0;
+		glUniform1i(shader.textureLocation, unit);
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, object.texture.handle);
+	}
+
+
 	glDrawArrays(GL_TRIANGLES, 0, object.mesh.data.size());
 	glBindVertexArray(0); // unbind VAO
 
@@ -1310,27 +1304,14 @@ int main(int argc, char** argv)
 	Sphere sphere(
 		glm::mat4(1.0f), // starting transform
 		1.0f, // starting radius
-		0.0f, // r
+		1.0f, // r
 		1.0f, // g
-		0.0f, // b
+		1.0f, // b
 		0.1f, // ka 
 		0.9f, // kd
 		0.3f, // ks
 		glm::vec3(-1.2f, 1.0f, 0.0f), //starting position
-		32 //segments
-	);
-
-	Sphere sphere2(
-		glm::mat4(1.0f), // starting transform
-		1.0, // starting radius
-		1.0f, // r
-		0.0f, // g
-		0.0f, // b
-		0.1f, // ka 
-		0.9f, // kd
-		0.3f, // ks
-		glm::vec3(1.2f, 1.0f, 0.0f), //starting position
-		32 //segments
+		16 //segments
 	);
 
 
@@ -1493,7 +1474,7 @@ int main(int argc, char** argv)
 			RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
-			RenderSphere(sphere, gouradShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
+			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 
 			glfwSwapBuffers(window); // swap buffer
 		}
