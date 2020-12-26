@@ -66,21 +66,23 @@ public:
 	float k_ambient;
 	float k_diffuse;
 	float k_specular;
+	int alpha;
 	Material();
-	Material(float, float, float, float, float, float);
+	Material(float, float, float, float, float, float,int);
 };
 
 Material::Material() {
 
 }
 
-Material::Material(float r, float g, float b, float ka, float kd, float ks) {
+Material::Material(float r, float g, float b, float ka, float kd, float ks, int a) {
 	baseColor.x = r;
 	baseColor.y = g;
 	baseColor.z = b;
 	k_ambient = ka;
 	k_diffuse = kd;
 	k_specular = ks;
+	alpha = a;
 }
 
 class PointLightSourceCubeMesh {
@@ -462,12 +464,12 @@ public:
 	Material material;
 	Texture texture;
 	glm::vec3 position;
-	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments); // cylinder constructor
+	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments,int alpha); // cylinder constructor
 };
 
-Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments) {
+Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments,int alpha) {
 	mesh = SphereMesh(radius, horizontalSegments,verticalSegments);
-	material = Material(r, g, b, ka, kd, ks);
+	material = Material(r, g, b, ka, kd, ks,alpha);
 	position = position;
 	texture = Texture("assets/textures/tiles_diffuse.dds");
 	transform = glm::translate(_transform, position);
@@ -743,12 +745,12 @@ public:
 	Material material;
 	glm::vec3 position;
 	Texture texture;
-	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position); // cylinder constructor
+	Cylinder::Cylinder(glm::mat4 transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position,int alpha); // cylinder constructor
 };
 
-Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position) {
+Cylinder::Cylinder(glm::mat4 _transform, float radius, float length, int segments, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position,int alpha) {
 	mesh = CylinderMesh(radius, length, segments);
-	material = Material(r, g, b, ka, kd, ks);
+	material = Material(r, g, b, ka, kd, ks,alpha);
 	texture = Texture("assets/textures/tiles_diffuse.dds");
 	position = position;
 	transform = glm::translate(_transform, position);
@@ -878,17 +880,17 @@ public:
 	GLuint Vao; // vertex array object
 	GLuint Vbo; // vertex buffer object
 	GLuint Ebo; // element buffer object
-	Cuboid::Cuboid(glm::mat4 transform, glm::vec3 position, float length, float width, float heíght, float r, float g, float b, float, float, float); // constructor
+	Cuboid::Cuboid(glm::mat4 transform, glm::vec3 position, float length, float width, float heíght, float r, float g, float b, float, float, float,int); // constructor
 	Material material;
 	Texture texture;
 };
 
-Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float width, float height, float r, float g, float b, float ka, float kd, float ks) {
+Cuboid::Cuboid(glm::mat4 _transform, glm::vec3 _position, float length, float width, float height, float r, float g, float b, float ka, float kd, float ks,int alpha) {
 
 	position = _position;
 	transform = glm::translate(_transform, position);
 	mesh = CuboidMesh(length, height, width);
-	material = Material(r, g, b, ka, kd, ks);
+	material = Material(r, g, b, ka, kd, ks,alpha);
 	texture = Texture("assets/textures/wood_texture.dds");
 	glGenVertexArrays(1, &Vao); // create the VAO
 	glBindVertexArray(Vao); // bind the VAO
@@ -950,6 +952,7 @@ public:
 	GLint k_linear;
 	GLint k_quadratic;
 	GLint textureLocation;
+	GLint alpha;
 	string type;
 	Shader::Shader(string relativePathVert, string relativePathFrag, string _type);
 
@@ -1059,6 +1062,7 @@ Shader::Shader(string relativePathVert, string relativePathFrag, string _type) {
 		k_linear = glGetUniformLocation(program, "k_linear"); // get uniform ID for 
 		k_constant = glGetUniformLocation(program, "k_constant"); // get uniform ID for 
 		k_quadratic = glGetUniformLocation(program, "k_quadratic"); // get uniform ID for 
+		alpha = glGetUniformLocation(program, "alpha");
 
 	}
 	if (type == "basic") {
@@ -1118,6 +1122,9 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
+
+	glUniform1i(shader.alpha, 1.0);
+
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
 	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
@@ -1161,6 +1168,9 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
+
+	glUniform1i(shader.alpha, 1.0);
+
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
 	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
@@ -1204,6 +1214,9 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniform1f(shader.k_constant, pLightSource.attenuation_Constant);
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
+
+	glUniform1i(shader.alpha, 1.0);
+
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
 	glUniform3f(shader.pointLightColor, energy.x, energy.y, energy.z); // push color to shader
@@ -1215,6 +1228,7 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniform1f(shader.k_ambient, object.material.k_ambient);
 	glUniform1f(shader.k_diffuse, object.material.k_diffuse);
 	glUniform1f(shader.k_specular, object.material.k_specular);
+
 
 	if (shader.type == "phong") {
 		int unit = 0;
@@ -1337,7 +1351,8 @@ int main(int argc, char** argv)
 		1.0f, // base color b
 		0.1f, // ka 
 		0.7f, // kd
-		0.1f // ks
+		0.1f, // ks
+		2 // alpha
 	);
 
 	Cylinder cylinder(
@@ -1351,7 +1366,8 @@ int main(int argc, char** argv)
 		0.1f, // ka 
 		0.7f, // kd
 		0.3f, // ks
-		glm::vec3(1.5f, 1.0f, 0.0f) //starting position
+		glm::vec3(1.5f, 1.0f, 0.0f), //starting position
+		8 // alpha
 	);
 
 
@@ -1366,7 +1382,8 @@ int main(int argc, char** argv)
 		0.3f, // ks
 		glm::vec3(-1.5f, 1.0f, 0.0f), //starting position
 		32, // latitude segments
-		64 // longitude segments
+		64, // longitude segments
+		8 // alpha
 	);
 
 
@@ -1526,7 +1543,7 @@ int main(int argc, char** argv)
 
 			glFrontFace(GL_CCW);		// counter clockwise
 
-			RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
+			// RenderPointLightSource(pointLightSource, basicShader, viewMatrix, mainCamera);
 			RenderCuboid(cuboid, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderCylinder(cylinder, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
 			RenderSphere(sphere, phongShader, viewMatrix, mainCamera, pointLightSource, directionalLightSource);
