@@ -195,21 +195,21 @@ class SphereMesh {
 public:
 	std::vector<float> data; // dynamic vertices array
 	SphereMesh(); // default constructor
-	SphereMesh(float radius, float segments); // cylinder mesh  constructor
+	SphereMesh(float radius, float latitudeSegments, float longitudeSegments); // cylinder mesh  constructor
 };
 
 SphereMesh::SphereMesh() { // default constructor
 
 }
 
-SphereMesh::SphereMesh(float radius, float segments) {
+SphereMesh::SphereMesh(float radius, float latitudeSegments, float longitudeSegments) {
 
 	std::vector<glm::vec3> sphereVertices;
 
-	for (unsigned int i = 1; i < segments; i++) {
-		float verticalAngle = float(i) * glm::pi<float>() / float(segments);
-		for (unsigned int j = 0; j < segments; j++) {
-			float horizontalAngle = float(j) * 2.0f * glm::pi<float>() / float(segments);
+	for (unsigned int i = 1; i < latitudeSegments; i++) {
+		float verticalAngle = float(i) * glm::pi<float>() / float(latitudeSegments);
+		for (unsigned int j = 0; j < longitudeSegments; j++) {
+			float horizontalAngle = float(j) * 2.0f * glm::pi<float>() / float(longitudeSegments);
 			glm::vec3 position = glm::vec3(
 				radius * glm::sin(verticalAngle) * glm::cos(horizontalAngle),
 				radius * glm::cos(verticalAngle),
@@ -220,11 +220,16 @@ SphereMesh::SphereMesh(float radius, float segments) {
 	}
 
 	//  top segments
-	for (int i = 0; i < segments; i++) {
+	for (int i = 0; i < longitudeSegments; i++) {
+
+		float u, v;
+		glm::vec3 sphereCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 n;
+
 		glm::vec3 midPointTop = glm::vec3(0.0f, 1.0 * radius, 0.0f);
 
 		glm::vec3 v0 = midPointTop;
-		glm::vec3 v1(sphereVertices[i == segments - 1 ? 0 : i + 1].x, sphereVertices[i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v1(sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].x, sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].y, sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].z);
 		glm::vec3 v2(sphereVertices[i].x, sphereVertices[i].y, sphereVertices[i].z);
 
 		//triangle 1
@@ -236,8 +241,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v0.y); //ny
 		data.push_back(v0.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v0 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
@@ -247,8 +256,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v1.y); //ny
 		data.push_back(v1.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v1 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
@@ -258,18 +271,24 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v2.y); //ny
 		data.push_back(v2.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v2 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 	}
 
 	// bottom segments
-	for (int i = 0; i < segments; i++) {
+	for (int i = 0; i < longitudeSegments; i++) {
+		float u, v;
+		glm::vec3 sphereCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 n;
 		glm::vec3 midPointBottom = glm::vec3(0.0f, -1.0 * radius, 0.0f);
-
 		glm::vec3 v0 = midPointBottom;
 		glm::vec3 v1(sphereVertices[i].x, -1.0f * sphereVertices[i].y, sphereVertices[i].z);
-		glm::vec3 v2(sphereVertices[i == segments - 1 ? 0 : i + 1].x, -1.0f * sphereVertices[i == segments - 1 ? 0 : i + 1].y, sphereVertices[i == segments - 1 ? 0 : i + 1].z);
+		glm::vec3 v2(sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].x, -1.0f * sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].y, sphereVertices[i == longitudeSegments - 1 ? 0 : i + 1].z);
 
 		//triangle 1
 		data.push_back(v0.x); //vx
@@ -280,8 +299,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v0.y); //ny
 		data.push_back(v0.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v0 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v1.x); //vx
 		data.push_back(v1.y); //vy
@@ -291,8 +314,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v1.y); //ny
 		data.push_back(v1.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v1 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 		data.push_back(v2.x); //vx
 		data.push_back(v2.y); //vy
@@ -302,28 +329,31 @@ SphereMesh::SphereMesh(float radius, float segments) {
 		data.push_back(v2.y); //ny
 		data.push_back(v2.z); //nz
 
-		data.push_back(0.0f); //u
-		data.push_back(0.0f); //v
+		n = glm::normalize(v2 - sphereCenter);
+		u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+		v = n.y * 0.5 + 0.5;
+
+		data.push_back(u); //u
+		data.push_back(v); //v
 
 	}
 
 	// side segments
-	for (int j = 0; j < sphereVertices.size() - segments; j += segments) {
-		
-		glm::vec3 v0, v1, v2, v3, v4, v5;
-		float u, v;
-		for (int i = 0; i < segments; i++) {
+	for (int j = 0; j < sphereVertices.size() - longitudeSegments; j += longitudeSegments) {
+		for (int i = 0; i < longitudeSegments; i++) {
+
+			float u, v;
+			glm::vec3 sphereCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+			glm::vec3 n;
 
 				glm::vec3 v0(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v1(sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].x, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].y, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].z);
-				glm::vec3 v2(sphereVertices[segments + i + j].x, sphereVertices[segments + i + j].y, sphereVertices[segments + i + j].z);
+				glm::vec3 v1(sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].x, sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].y, sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].z);
+				glm::vec3 v2(sphereVertices[longitudeSegments + i + j].x, sphereVertices[longitudeSegments + i + j].y, sphereVertices[longitudeSegments + i + j].z);
 
-				glm::vec3 v3(sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].x , sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].y, sphereVertices[i == segments - 1 ? i - segments + 1 + j : i + 1 + j].z);
+				glm::vec3 v3(sphereVertices[i == longitudeSegments - 1 ? i - longitudeSegments + 1 + j : i + 1 + j].x , sphereVertices[i == longitudeSegments - 1 ? i - longitudeSegments + 1 + j : i + 1 + j].y, sphereVertices[i == longitudeSegments - 1 ? i - longitudeSegments + 1 + j : i + 1 + j].z);
+				glm::vec3 v4(sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].x, sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].y, sphereVertices[i == longitudeSegments - 1 ? i + 1 + j : longitudeSegments + i + 1 + j].z);
 				glm::vec3 v5(sphereVertices[i + j].x, sphereVertices[i + j].y, sphereVertices[i + j].z);
-				glm::vec3 v4(sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].x, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].y, sphereVertices[i == segments - 1 ? i + 1 + j : segments + i + 1 + j].z);
-				
-				u = 0.0f;
-				v = 0.0f;
+
 				//triangle 1
 				data.push_back(v0.x); //vx
 				data.push_back(v0.y); //vy
@@ -333,8 +363,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v0.y); //ny
 				data.push_back(v0.z); //nz
 
-				data.push_back((i + 1) / (float)segments); //u
-				data.push_back((j) / (float)segments); //v
+				n = glm::normalize(v0 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
+
+				data.push_back(u); //u
+				data.push_back(v); //v
 
 				data.push_back(v1.x); //vx
 				data.push_back(v1.y); //vy
@@ -344,8 +378,13 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v1.y); //ny
 				data.push_back(v1.z); //nz
 
-				data.push_back((i) / (float)segments); //u
-				data.push_back((j + 1) / (float)segments); //v
+				n = glm::normalize(v1 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
+
+				data.push_back(u); //u
+				data.push_back(v); //v
+
 
 				data.push_back(v2.x); //vx
 				data.push_back(v2.y); //vy
@@ -355,9 +394,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v2.y); //ny
 				data.push_back(v2.z); //nz
 
-				data.push_back((i + 1) / (float)segments); //u
-				data.push_back((j + 1) / (float)segments); //v
+				n = glm::normalize(v2 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
 
+				data.push_back(u); //u
+				data.push_back(v); //v
 
 				//triangle 2
 				data.push_back(v3.x); //vx
@@ -368,8 +410,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v3.y); //ny
 				data.push_back(v3.z); //nz
 
-				data.push_back((i) / (float)segments); //u
-				data.push_back((j) / (float)segments); //v
+				n = glm::normalize(v3 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
+
+				data.push_back(u); //u
+				data.push_back(v); //v
 
 				data.push_back(v4.x); //vx
 				data.push_back(v4.y); //vy
@@ -379,8 +425,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v4.y); //ny
 				data.push_back(v4.z); //nz
 
-				data.push_back((i) / (float)segments); //u
-				data.push_back((j + 1) / (float)segments); //v
+				n = glm::normalize(v4 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
+
+				data.push_back(u); //u
+				data.push_back(v); //v
 
 				data.push_back(v5.x); //vx
 				data.push_back(v5.y); //vy
@@ -390,8 +440,12 @@ SphereMesh::SphereMesh(float radius, float segments) {
 				data.push_back(v5.y); //ny
 				data.push_back(v5.z); //nz
 
-				data.push_back((i + 1) / (float)segments); //u
-				data.push_back((j) / (float)segments); //v
+				n = glm::normalize(v5 - sphereCenter);
+				u = atan2(n.x, n.z) / (2 * glm::pi<float>()) + 0.5;
+				v = n.y * 0.5 + 0.5;
+
+				data.push_back(u); //u
+				data.push_back(v); //v
 
 		}
 	}
@@ -408,11 +462,11 @@ public:
 	Material material;
 	Texture texture;
 	glm::vec3 position;
-	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments); // cylinder constructor
+	Sphere::Sphere(glm::mat4 transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments); // cylinder constructor
 };
 
-Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int segments) {
-	mesh = SphereMesh(radius, segments);
+Sphere::Sphere(glm::mat4 _transform, float radius, float r, float g, float b, float ka, float kd, float ks, glm::vec3 position, int horizontalSegments, int verticalSegments) {
+	mesh = SphereMesh(radius, horizontalSegments,verticalSegments);
 	material = Material(r, g, b, ka, kd, ks);
 	position = position;
 	texture = Texture("assets/textures/tiles_diffuse.dds");
@@ -1274,30 +1328,30 @@ int main(int argc, char** argv)
 	// cuboid definition generation
 	Cuboid cuboid(
 		glm::mat4(1.0f), // starting transform
-		glm::vec3(-1.2f, -1.5f, 0.0f), // starting position
+		glm::vec3(0.0f, -1.5f, 0.0f), // starting position
 		1.5f, // starting length
 		1.5f, // starting height
 		1.5f, // starting width
 		1.0f, // base color r
 		1.0f, // base color g
 		1.0f, // base color b
-		0.05f, // ka 
-		0.8f, // kd
-		0.5f // ks
+		0.1f, // ka 
+		0.7f, // kd
+		0.1f // ks
 	);
 
 	Cylinder cylinder(
 		glm::mat4(1.0f), // starting transform
-		0.5f, // starting radius
-		1.5f, // starting length
+		1.0f, // starting radius
+		1.3f, // starting length
 		32, // number of segments
 		1.0f, // r
 		1.0f, // g
 		1.0f, // b
-		0.05f, // ka 
-		0.8f, // kd
-		0.5f, // ks
-		glm::vec3(1.2f, -1.5f, 0.0f) //starting position
+		0.1f, // ka 
+		0.7f, // kd
+		0.3f, // ks
+		glm::vec3(1.5f, 1.0f, 0.0f) //starting position
 	);
 
 
@@ -1308,10 +1362,11 @@ int main(int argc, char** argv)
 		1.0f, // g
 		1.0f, // b
 		0.1f, // ka 
-		0.9f, // kd
+		0.7f, // kd
 		0.3f, // ks
-		glm::vec3(-1.2f, 1.0f, 0.0f), //starting position
-		16 //segments
+		glm::vec3(-1.5f, 1.0f, 0.0f), //starting position
+		32, // latitude segments
+		64 // longitude segments
 	);
 
 
