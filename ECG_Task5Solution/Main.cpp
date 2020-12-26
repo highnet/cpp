@@ -1123,7 +1123,7 @@ void RenderCuboid(Cuboid object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 
-	glUniform1i(shader.alpha, 1.0);
+	glUniform1i(shader.alpha, object.material.alpha);
 
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
@@ -1169,7 +1169,7 @@ void RenderSphere(Sphere object, Shader shader, glm::mat4 viewMatrix, OrbitalCam
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 
-	glUniform1i(shader.alpha, 1.0);
+	glUniform1i(shader.alpha, object.material.alpha);
 
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
@@ -1215,7 +1215,7 @@ void RenderCylinder(Cylinder object, Shader shader, glm::mat4 viewMatrix, Orbita
 	glUniform1f(shader.k_linear, pLightSource.attenuation_Linear);
 	glUniform1f(shader.k_quadratic, pLightSource.attenuation_Quadratic);
 
-	glUniform1i(shader.alpha, 1.0);
+	glUniform1i(shader.alpha, object.material.alpha);
 
 	glm::vec3 energy = glm::vec3(pLightSource.color.x, pLightSource.color.y, pLightSource.color.z);
 
