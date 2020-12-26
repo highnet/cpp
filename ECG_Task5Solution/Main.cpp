@@ -387,7 +387,6 @@ SphereMesh::SphereMesh(float radius, float latitudeSegments, float longitudeSegm
 				data.push_back(u); //u
 				data.push_back(v); //v
 
-
 				data.push_back(v2.x); //vx
 				data.push_back(v2.y); //vy
 				data.push_back(v2.z); //vz
@@ -451,6 +450,7 @@ SphereMesh::SphereMesh(float radius, float latitudeSegments, float longitudeSegm
 
 		}
 	}
+
 
 }
 
@@ -1388,7 +1388,7 @@ int main(int argc, char** argv)
 
 
 	//generate camera
-	glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // set the as background color
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set the as background color
 	glViewport(0, 0, width, height); // set viewport transform
 	OrbitalCamera mainCamera(
 		glm::vec3(1.0f, 1.0f, 0.0f), // camera's position transform in cartesian coordinates x,y,z
