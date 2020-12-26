@@ -24,6 +24,8 @@ uniform float k_constant;
 uniform float k_linear;
 uniform float k_quadratic;
 
+uniform int alpha;
+
 void main()
 {
 
@@ -50,7 +52,7 @@ void main()
     float specularStrength = 1.0; 
     vec3 viewDir = normalize(viewPos - Position);
     vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 10);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), alpha);
     vec3 specular = k_specular * specularStrength * spec * pLightColor;      
 
     float distance    = length(pLightPosition - position);
